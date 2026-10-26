@@ -1,65 +1,64 @@
 #!/usr/bin/env python3
-"""
-根据标记注释，将 tab.css 和 tab.js 的内容插入到 tab.html 中对应位置。
-
-思路:
-1. 读取整个 HTML 文件到内存
-2. 读取 CSS 和 JS 文件内容
-3. 用正则匹配 (start) ... (end) 之间的所有内容
-4. 替换为: start标记 + <style>CSS</style> + end标记 (CSS块)
-          start标记 + <script>JS</script> + end标记 (JS块)
-5. 写入输出文件
-"""
-import re
+"""Inline tab.css and tab.js into src/tab.html to produce a standalone page."""
+import argparse
 import sys
 from pathlib import Path
 
 
+ROOT = Path(__file__).resolve().parent
+
+
+def replace_placeholder(html, kind, content, tag):
+    start = f"<!-- INTEGRATE:{kind}:START -->"
+    end = f"<!-- INTEGRATE:{kind}:END -->"
+    start_count = html.count(start)
+    end_count = html.count(end)
+
+    if start_count != 1 or end_count != 1:
+        raise ValueError(
+            f"{kind} placeholders must each appear exactly once "
+            f"(found {start_count} start, {end_count} end)"
+        )
+
+    start_index = html.index(start)
+    end_index = html.index(end)
+    if start_index >= end_index:
+        raise ValueError(f"{kind} placeholder end must follow its start")
+
+    block = f"{start}\n<{tag}>\n{content.rstrip()}\n</{tag}>\n{end}"
+    return html[:start_index] + block + html[end_index + len(end):]
+
+
 def main():
-    # 默认路径
-    src_path = Path('src/tab.html')
-    css_path = Path('src/tab.css')
-    js_path = Path('src/tab.js')
-    out_path = Path('tab.browser.iWonder.html')
-
-    # 检查文件存在
-    for f in [src_path, css_path, js_path]:
-        if not f.exists():
-            print(f'error: {f} not found', file=sys.stderr)
-            sys.exit(1)
-
-    # 读取文件内容
-    html = src_path.read_text(encoding='utf-8')
-    css = css_path.read_text(encoding='utf-8')
-    js = js_path.read_text(encoding='utf-8')
-
-    # 正则替换 CSS 块: 匹配 (start) 到 (end) 之间的所有内容
-    # 保留 start/end 标记，中间插入 <style>...</style>
-    def css_replacer(m):
-        return f'{m.group(1)}\n<style>\n{css}\n</style>\n{m.group(2)}'
-
-    html = re.sub(
-        r'(<!--.*?tab\.css.*?\(start\).*?-->).*?(<!--.*?tab\.css.*?\(end\).*?-->)',
-        css_replacer,
-        html,
-        flags=re.DOTALL | re.IGNORECASE
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default=ROOT / "tab.browser.iWonder.html",
+        help="output path (default: tab.browser.iWonder.html in the project root)",
     )
+    args = parser.parse_args()
+    output_path = args.output if args.output.is_absolute() else ROOT / args.output
 
-    # 正则替换 JS 块: 匹配 start 到 end 之间的所有内容
-    def js_replacer(m):
-        return f'{m.group(1)}\n<script>\n{js}\n</script>\n{m.group(2)}'
+    html_path = ROOT / "src/tab.html"
+    css_path = ROOT / "src/tab.css"
+    js_path = ROOT / "src/tab.js"
 
-    html = re.sub(
-        r'(<!--.*?tab\.js\s+start.*?-->).*?(<!--.*?tab\.js\s+end.*?-->)',
-        js_replacer,
-        html,
-        flags=re.DOTALL | re.IGNORECASE
-    )
+    try:
+        html = html_path.read_text(encoding="utf-8")
+        css = css_path.read_text(encoding="utf-8")
+        js = js_path.read_text(encoding="utf-8")
+        html = replace_placeholder(html, "CSS", css, "style")
+        html = replace_placeholder(html, "JS", js, "script")
+    except (OSError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
 
-    # 写入输出文件
-    out_path.write_text(html, encoding='utf-8')
-    print(f'Created {out_path}')
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    print(f"Created {output_path}")
+    return 0
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    raise SystemExit(main())

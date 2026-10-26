@@ -112,6 +112,10 @@ body {
 .button-item > svg {
   height: calc(var(--height-2) / 2);
 }
+
+.engine-item[name="google-ai-mode"] > svg {
+  height: calc(var(--height-2) / 2.4);
+}
 /* #endregion */
 
 /* --- Component Layout --- */
