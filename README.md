@@ -42,10 +42,7 @@
 
 ## 🛠️ 安装说明
 1. [点击下载`tab.browser.iWonder.html`](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest) .
-2.  **设置为新标签页(强烈推荐✨✨)**
-    - 安装适用于您的浏览器的扩展程序，以将本地页面设置为主页。
-    - **Microsoft Edge**: [Custom New Tab Page](https://microsoftedge.microsoft.com/addons/detail/ljabenhdllbfiglklhlmoecabdkmkjkp)
-    - 在扩展的设置中，将 URL 设置为您本地 `tab.browser.iWonder.html` 文件的地址 (例如 `file:///C:/path/to/your/project/src/tab.browser.iWonder.html`)。
+1. 浏览器中将下载的`tab.browser.iWonder.html`文件地址设置为主页.
 ---
 
 ## 👁️ 预览
