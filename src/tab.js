@@ -163,8 +163,7 @@ function settingsModeEnter() {
   classHandler(`.input-container`).style.marginLeft = "60px";
   // Set placeholder text for the settings input
   classHandler(`.settings-input`).placeholder =
-    dbGet("imagePath") ||
-    "Enter image folder path (e.g. F:/path/images), then confirm in the pop-up window.";
+    dbGet("imagePath") || "Image folder path...";
   classHandler(`.button-list`).classList.add("expanded");
 }
 

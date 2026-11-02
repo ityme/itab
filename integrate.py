@@ -34,8 +34,8 @@ def main():
     parser.add_argument(
         "-o", "--output",
         type=Path,
-        default=ROOT / "tab.browser.iWonder.html",
-        help="output path (default: tab.browser.iWonder.html in the project root)",
+        default=ROOT / "itab.html",
+        help="output path (default: itab.html in the project root)",
     )
     args = parser.parse_args()
     output_path = args.output if args.output.is_absolute() else ROOT / args.output

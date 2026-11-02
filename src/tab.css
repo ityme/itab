@@ -294,3 +294,36 @@ body {
     visibility: visible;
   }
 }
+
+/* --- Mobile Layout --- */
+@media (max-width: 480px) {
+  body {
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .search-container {
+    width: calc(100vw - 16px);
+    min-width: 0;
+  }
+
+  .input-container {
+    min-width: 0;
+    margin-left: 8px !important;
+  }
+
+  .shortcut-container,
+  .button-container {
+    margin-left: 8px;
+  }
+
+  .shortcut-list {
+    gap: 6px;
+  }
+
+  .search-input,
+  .settings-input {
+    font-size: 16px;
+  }
+}

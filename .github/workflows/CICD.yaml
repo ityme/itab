@@ -45,7 +45,7 @@ jobs:
         run: |
           cd _temp_workspace
           python3 integrate.py
-          mv tab.browser.iWonder.html ../_temp_release_assets/
+          mv itab.html ../_temp_release_assets/
           cd ..
 
       - name: check files

@@ -1,11 +1,12 @@
-# iWonder Browser Tab || Start Page || Home Page
+# iWonder Tab
 
 这是一个简洁、美观且功能强大的浏览器起始页项目，旨在提供一个干净、可定制的界面来开始您的网页浏览。
 
 ## ✨ 功能特性
 
 - **🖼️ 动态背景**: 每次打开页面时，都会从您的个人收藏中随机选择一张新的背景图片。
-- **🔍 多引擎搜索**: 在 谷歌、必应和百度之间无缝切换。您最后选择的搜索引擎将被自动保存，以备下次访问。
+- **🔍 多引擎搜索**: 在谷歌、必应、百度和 Google AI Mode 之间切换。您最后选择的搜索引擎将被自动保存，以备下次访问。
+- **🚀 快捷入口**: 一键打开 Bilibili、YouTube 和 GitHub。
 - **🔮 毛玻璃界面**: 搜索栏采用现代化的半透明“毛玻璃”效果，可与任何背景完美融合。
 - **🚀 流畅动画**: 搜索栏以流畅的淡入淡出和滑动动画出现和消失。
 - **⚙️ 持久化设置**: 您偏好的搜索引擎和搜索栏的可见性状态会保存在本地浏览器中，提供一致的体验。
@@ -41,8 +42,10 @@
 7. 此时背景图片设置完成.
 
 ## 🛠️ 安装说明
-1. [点击下载`tab.browser.iWonder.html`](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest) .
-1. 浏览器中将下载的`tab.browser.iWonder.html`文件地址设置为主页.
+1. [点击下载 `itab.html`](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest)。
+2. 将下载的 `itab.html` 文件设置为浏览器主页。
+
+源码预览可直接打开 `src/tab.html`；发布版由 `python3 integrate.py` 生成。
 ---
 
 ## 👁️ 预览
