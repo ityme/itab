@@ -7,10 +7,10 @@
 
 :root {
   /* search container height */
-  --height-1: 48px;
+  --height-1: 42px;
 
   /* xxx-container & xxx-list &  xxx-item  : == --height-1 - 2 * border */
-  --height-2: 46px;
+  --height-2: 40px;
 }
 
 /* --- Global Resets and Base Styles --- */
@@ -52,9 +52,11 @@ body {
   align-items: center;
   justify-content: flex-start;
   /* gap: 10px; */
-  width: 48vw;
+  width: 46vw;
   min-width: 350px;
   height: var(--height-1);
+  margin-bottom: 24px;
+  container-type: inline-size;
   border-radius: calc(var(--height-1) / 2);
   /* Glassmorphism effect: semi-transparent background */
   background-color: rgba(255, 255, 255, 0.25);
@@ -135,6 +137,7 @@ body {
   justify-content: center;
   /* Allow the input container to fill the remaining space */
   flex: 1;
+  min-width: 0;
   /* Margin is adjusted in settings mode for better aesthetics */
 }
 
@@ -205,7 +208,7 @@ body {
 .search-input,
 .settings-input {
   background-color: transparent;
-  font-size: 17px;
+  font-size: 14px;
 }
 
 /* --- Shortcut List --- */
@@ -295,8 +298,59 @@ body {
   }
 }
 
+/* --- Desktop Resolution Tiers --- */
+@media (min-width: 2200px) {
+  :root {
+    --height-1: 56px;
+    --height-2: 54px;
+  }
+
+  .search-container {
+    width: 46vw;
+  }
+
+  .search-input,
+  .settings-input {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 3200px) {
+  :root {
+    --height-1: 84px;
+    --height-2: 82px;
+  }
+
+  .search-container {
+    width: 46vw;
+  }
+
+  .search-input,
+  .settings-input {
+    font-size: 27px;
+  }
+}
+
+/* Keep the input available when shortcuts compete with the engine menu. */
+@container (max-width: 400px) {
+  .shortcut-container {
+    display: none;
+  }
+}
+
+@container (max-width: 540px) {
+  .engine-container:has(.engine-list.expanded) ~ .shortcut-container {
+    display: none;
+  }
+}
+
 /* --- Mobile Layout --- */
 @media (max-width: 480px) {
+  :root {
+    --height-1: 48px;
+    --height-2: 46px;
+  }
+
   body {
     min-height: 100dvh;
     padding: env(safe-area-inset-top) env(safe-area-inset-right)
