@@ -1,6 +1,7 @@
 /**
  * @file background/04-noise-neural-grid.js
  * @description 02 电影胶片噪点 + 08 神经光栅交互
+ * @optimization 使用 128x128 预渲染离线噪点纹理全屏平铺，大幅节省 4K/2K 高分屏 CPU 算力
  */
 
 export function mount(container) {
@@ -23,14 +24,14 @@ export function mount(container) {
         z-index: 1;
         display: block;
       }
-      .nn-noise-canvas {
+      .nn-noise-layer {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         z-index: 2;
         pointer-events: none;
-        opacity: 0.22;
+        opacity: 0.18;
       }
       .nn-vignette {
         position: absolute;
@@ -49,15 +50,37 @@ export function mount(container) {
     </style>
     <div class="nn-wrap">
       <canvas class="nn-grid-canvas"></canvas>
-      <canvas class="nn-noise-canvas"></canvas>
+      <div class="nn-noise-layer"></div>
       <div class="nn-vignette"></div>
     </div>
   `;
 
   const gridCanvas = container.querySelector(".nn-grid-canvas");
-  const noiseCanvas = container.querySelector(".nn-noise-canvas");
+  const noiseLayer = container.querySelector(".nn-noise-layer");
   const gridCtx = gridCanvas.getContext("2d");
-  const noiseCtx = noiseCanvas.getContext("2d");
+
+  // --- 噪点性能优化：预生成 4 帧 128x128 噪点 Pattern 平铺 ---
+  const NOISE_SIZE = 128;
+  const noisePatterns = [];
+  for (let frame = 0; frame < 4; frame++) {
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = NOISE_SIZE;
+    offCanvas.height = NOISE_SIZE;
+    const offCtx = offCanvas.getContext("2d");
+    const imgData = offCtx.createImageData(NOISE_SIZE, NOISE_SIZE);
+    const buffer = new Uint32Array(imgData.data.buffer);
+    for (let i = 0; i < buffer.length; i++) {
+      if (Math.random() < 0.18) {
+        const gray = (Math.random() * 255) | 0;
+        buffer[i] = (45 << 24) | (gray << 16) | (gray << 8) | gray;
+      }
+    }
+    offCtx.putImageData(imgData, 0, 0);
+    noisePatterns.push(offCanvas.toDataURL());
+  }
+
+  let noiseFrame = 0;
+  let lastNoiseTime = 0;
 
   let width, height;
   const squareSize = 70;
@@ -79,8 +102,8 @@ export function mount(container) {
   }
 
   function resize() {
-    width = gridCanvas.width = noiseCanvas.width = window.innerWidth;
-    height = gridCanvas.height = noiseCanvas.height = window.innerHeight;
+    width = gridCanvas.width = window.innerWidth;
+    height = gridCanvas.height = window.innerHeight;
     setupGrid();
   }
   window.addEventListener("resize", resize);
@@ -101,23 +124,25 @@ export function mount(container) {
   window.addEventListener("mousemove", onMouseMove);
 
   let animId;
-  function render() {
+  function render(time) {
     if (disposed) return;
+
+    // 当页面切换到后台隐藏时跳过运算，实现 0 功耗
+    if (document.hidden) {
+      animId = requestAnimationFrame(render);
+      return;
+    }
+
     const now = Date.now();
 
-    // 1. 噪点
-    const imgData = noiseCtx.createImageData(width, height);
-    const buffer = new Uint32Array(imgData.data.buffer);
-    const len = buffer.length;
-    for (let i = 0; i < len; i += 2) {
-      if (Math.random() < 0.12) {
-        const gray = (Math.random() * 255) | 0;
-        buffer[i] = (40 << 24) | (gray << 16) | (gray << 8) | gray;
-      }
+    // 1. 切换噪点帧（控制在 ~12fps 模拟电影胶片频率，极度省电）
+    if (time - lastNoiseTime > 80) {
+      lastNoiseTime = time;
+      noiseFrame = (noiseFrame + 1) % noisePatterns.length;
+      noiseLayer.style.backgroundImage = `url("${noisePatterns[noiseFrame]}")`;
     }
-    noiseCtx.putImageData(imgData, 0, 0);
 
-    // 2. 神经网格
+    // 2. 神经网格渲染
     gridCtx.clearRect(0, 0, width, height);
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i];

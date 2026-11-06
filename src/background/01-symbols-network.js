@@ -175,6 +175,10 @@ export function mount(container) {
   let animId;
   function loop() {
     if (disposed) return;
+    if (document.hidden) {
+      animId = requestAnimationFrame(loop);
+      return;
+    }
     const time = Date.now();
 
     // 1. 符文

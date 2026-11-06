@@ -241,6 +241,10 @@ export function mount(container) {
 
   function render() {
     if (disposed) return;
+    if (document.hidden) {
+      animId = requestAnimationFrame(render);
+      return;
+    }
     const t = (Date.now() - start) * 0.001;
 
     gl.clearColor(0.04, 0.06, 0.09, 1.0);

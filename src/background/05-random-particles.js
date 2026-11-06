@@ -1,6 +1,7 @@
 /**
  * @file background/05-random-particles.js
  * @description 06 动态粒子系统 · 鼠标距离放大 · 每次随机色系
+ * @optimization 使用 requestAnimationFrame，增加页面切后台自动休眠（0 CPU 消耗）
  */
 
 export function mount(container) {
@@ -67,6 +68,13 @@ export function mount(container) {
   let animId;
   function loop() {
     if (disposed) return;
+
+    // 当标签页切换到后台隐藏时跳过运算，实现 0 CPU 功耗
+    if (document.hidden) {
+      animId = requestAnimationFrame(loop);
+      return;
+    }
+
     ctx.clearRect(0, 0, w, h);
 
     for (let i = 0; i < arc; i++) {
