@@ -1,7 +1,7 @@
 /**
  * @file background/01-symbols-network.js
  * @description 04 符文矩阵 + 01 粒子连线引力网络
- * 新增引力吸引特性：鼠标滑过时，周围的符文与粒子网络节点会被引力平滑吸引朝鼠标汇聚，移开后弹性回弹
+ * 采用轻柔细腻的呼吸引力：微弱向心倾向（类似微风拂面），保留整体几何点阵结构，绝不坍缩汇聚成蜘蛛网
  */
 
 export function mount(container) {
@@ -38,7 +38,7 @@ export function mount(container) {
 
   let target = { x: -9999, y: -9999 };
 
-  // --- 04 符文矩阵部分（加入引力吸附偏移）---
+  // --- 04 符文矩阵部分（极其克制的轻微倾斜引力，最大 8px 缓动）---
   let elements = [];
   const presets = {};
 
@@ -51,21 +51,20 @@ export function mount(container) {
         this.x += this.dx;
         this.y += this.dy;
 
-        // 鼠标引力计算
         const dxM = target.x - (this.originX + this.offsetX);
         const dyM = target.y - (this.originY + this.offsetY);
         const dist = Math.sqrt(dxM * dxM + dyM * dyM);
-        const maxDist = 220;
+        const maxDist = 180;
 
         if (dist < maxDist && dist > 1) {
-          const force = (1 - dist / maxDist) * 35; // 最大吸引偏移 35px
+          const force = (1 - dist / maxDist) * 8; // 轻微吸附 8px
           const targetOffX = (dxM / dist) * force;
           const targetOffY = (dyM / dist) * force;
-          this.offsetX += (targetOffX - this.offsetX) * 0.12;
-          this.offsetY += (targetOffY - this.offsetY) * 0.12;
+          this.offsetX += (targetOffX - this.offsetX) * 0.08;
+          this.offsetY += (targetOffY - this.offsetY) * 0.08;
         } else {
-          this.offsetX *= 0.88;
-          this.offsetY *= 0.88;
+          this.offsetX *= 0.92;
+          this.offsetY *= 0.92;
         }
 
         const renderX = this.x + this.offsetX + Math.sin((50 + x + (t / 10)) / 100) * 3;
@@ -93,21 +92,20 @@ export function mount(container) {
         this.y += this.dy;
         this.r += this.dr;
 
-        // 鼠标引力计算
         const dxM = target.x - (this.originX + this.offsetX);
         const dyM = target.y - (this.originY + this.offsetY);
         const dist = Math.sqrt(dxM * dxM + dyM * dyM);
-        const maxDist = 220;
+        const maxDist = 180;
 
         if (dist < maxDist && dist > 1) {
-          const force = (1 - dist / maxDist) * 35;
+          const force = (1 - dist / maxDist) * 8;
           const targetOffX = (dxM / dist) * force;
           const targetOffY = (dyM / dist) * force;
-          this.offsetX += (targetOffX - this.offsetX) * 0.12;
-          this.offsetY += (targetOffY - this.offsetY) * 0.12;
+          this.offsetX += (targetOffX - this.offsetX) * 0.08;
+          this.offsetY += (targetOffY - this.offsetY) * 0.08;
         } else {
-          this.offsetX *= 0.88;
-          this.offsetY *= 0.88;
+          this.offsetX *= 0.92;
+          this.offsetY *= 0.92;
         }
 
         const _this = this;
@@ -150,7 +148,7 @@ export function mount(container) {
     }
   }
 
-  // --- 01 粒子连线网络部分（增加向心引力吸附）---
+  // --- 01 粒子连线网络部分（轻微向心弹性偏移，保留网格骨架）---
   let points = [];
 
   function initNetwork() {
@@ -165,8 +163,8 @@ export function mount(container) {
         const py = y + Math.random() * stepY;
         points.push({
           x: px, originX: px, y: py, originY: py,
-          vx: (Math.random() - 0.5) * 0.7,
-          vy: (Math.random() - 0.5) * 0.7,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6,
           attrX: 0, attrY: 0
         });
       }
@@ -236,32 +234,31 @@ export function mount(container) {
     }
     const time = Date.now();
 
-    // 1. 渲染符文层
+    // 1. 符文层
     symbolCtx.clearRect(0, 0, symbolCanvas.width, symbolCanvas.height);
     for (let e in elements) elements[e].draw(symbolCtx, time);
 
-    // 2. 粒子自漂移 + 鼠标强力引力吸引
-    const GRAVITY_RADIUS = 280; // 鼠标吸附半径
+    // 2. 粒子自漂移 + 极轻微向心引力（最大只牵拉 12px，丝滑微动）
+    const GRAVITY_RADIUS = 200;
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
       p.x += p.vx; p.y += p.vy;
-      if (Math.abs(p.x - p.originX) > 36) p.vx *= -1;
-      if (Math.abs(p.y - p.originY) > 36) p.vy *= -1;
+      if (Math.abs(p.x - p.originX) > 28) p.vx *= -1;
+      if (Math.abs(p.y - p.originY) > 28) p.vy *= -1;
 
-      // 实时引力汇聚
       const dx = target.x - p.x;
       const dy = target.y - p.y;
       const d = Math.sqrt(dx * dx + dy * dy);
 
       if (d < GRAVITY_RADIUS && d > 1) {
-        const pull = (1 - d / GRAVITY_RADIUS) * 0.12; // 吸附力度
-        p.attrX += dx * pull;
-        p.attrY += dy * pull;
-        p.attrX *= 0.85; // 阻尼
-        p.attrY *= 0.85;
+        // 轻盈柔和的引力倾斜，绝不过度聚团
+        const targetAttrX = (dx / d) * (1 - d / GRAVITY_RADIUS) * 12;
+        const targetAttrY = (dy / d) * (1 - d / GRAVITY_RADIUS) * 12;
+        p.attrX += (targetAttrX - p.attrX) * 0.08;
+        p.attrY += (targetAttrY - p.attrY) * 0.08;
       } else {
-        p.attrX *= 0.82;
-        p.attrY *= 0.82;
+        p.attrX *= 0.90;
+        p.attrY *= 0.90;
       }
 
       p.x += p.attrX;
@@ -273,12 +270,12 @@ export function mount(container) {
     for(let i = 0; i < points.length; i++) {
       const p = points[i];
       const dist = Math.abs(getDistance(target, p));
-      if(dist < 5000) {
-        p.active = 0.75; p.circle.active = 0.95;
-      } else if(dist < 25000) {
-        p.active = 0.35; p.circle.active = 0.6;
-      } else if(dist < 50000) {
-        p.active = 0.12; p.circle.active = 0.25;
+      if(dist < 4000) {
+        p.active = 0.55; p.circle.active = 0.85;
+      } else if(dist < 18000) {
+        p.active = 0.22; p.circle.active = 0.42;
+      } else if(dist < 36000) {
+        p.active = 0.06; p.circle.active = 0.15;
       } else {
         p.active = 0; p.circle.active = 0;
       }
@@ -288,7 +285,7 @@ export function mount(container) {
           netCtx.beginPath();
           netCtx.moveTo(p.x, p.y);
           netCtx.lineTo(p.closest[k].x, p.closest[k].y);
-          netCtx.strokeStyle = currentTheme.netColor + (p.active * 0.85) + ')';
+          netCtx.strokeStyle = currentTheme.netColor + (p.active * 0.75) + ')';
           netCtx.stroke();
         }
       }
