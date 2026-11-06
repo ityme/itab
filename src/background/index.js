@@ -1,22 +1,29 @@
 /**
  * @file background/index.js
- * @description iWonder 扩展背景调度管理器
+ * @description iWonder 背景管理调度器
  * 
- * 架构升级：
- * 采用原生隔离的 Web Component / 全屏 iframe 承载 5 套独立的动态背景网页，
- * 不再对源码进行任何压缩阉割，100% 保持原作者 Shader、着色器 DOM、SVG、CSS 滤镜和原生动画。
+ * 核心设计：
+ * 1. 彻底弃用外部 iframe，所有 5 套背景全部作为直挂 DOM 的 ES Module 运行在 tab.html 中。
+ * 2. 保证 tab.html 的鼠标事件（右键显示/隐藏搜索框、滚轮中键隐藏、键盘输入）100% 畅通稳定。
+ * 3. 采用 (m + n) 取 1 随机算法，若未设图片目录则在 5 套动态背景中五选一。
  */
 
+import { mount as mountSymbolsNetwork } from "./01-symbols-network.js";
+import { mount as mountKaleidoscope } from "./02-kaleidoscope.js";
+import { mount as mountSakuraWebGL } from "./03-sakura-webgl.js";
+import { mount as mountNoiseNeuralGrid } from "./04-noise-neural-grid.js";
+import { mount as mountRandomParticles } from "./05-random-particles.js";
 import { getDirectoryHandle, verifyPermission } from "./storage.js";
 
-export const DYNAMIC_BACKGROUNDS = [
-  { id: "symbols-network", name: "几何符文与引力网络", url: "background/01-symbols-network.html" },
-  { id: "kaleidoscope", name: "10 原版折射万花筒", url: "background/02-kaleidoscope.html" },
-  { id: "sakura-webgl", name: "09 原版 WebGL 景深樱花", url: "background/03-sakura-webgl.html" },
-  { id: "noise-neural-grid", name: "胶片噪点与神经光栅", url: "background/04-noise-neural-grid.html" },
-  { id: "random-particles", name: "动态粒子聚散系统", url: "background/05-random-particles.html" }
+export const DYNAMIC_BACKGROUND_MODULES = [
+  { id: "symbols-network", name: "01 几何符文与引力网络", mount: mountSymbolsNetwork },
+  { id: "kaleidoscope", name: "02 原版折射万花筒", mount: mountKaleidoscope },
+  { id: "sakura-webgl", name: "03 原版 WebGL 景深飘落樱花", mount: mountSakuraWebGL },
+  { id: "noise-neural-grid", name: "04 胶片噪点与神经光栅", mount: mountNoiseNeuralGrid },
+  { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles }
 ];
 
+let activeUnmount = null;
 let currentBlobUrl = null;
 
 function cleanupBlobUrl() {
@@ -28,24 +35,12 @@ function cleanupBlobUrl() {
   }
 }
 
-function ensureFrameHost() {
-  let host = document.getElementById("iwonder-bg-frame");
+function ensureBackgroundHost() {
+  let host = document.getElementById("iwonder-background-host");
   if (!host) {
-    host = document.createElement("iframe");
-    host.id = "iwonder-bg-frame";
-    host.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      border: none;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      z-index: -1;
-      pointer-events: auto;
-    `;
+    host = document.createElement("div");
+    host.id = "iwonder-background-host";
+    host.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none;";
     document.body.prepend(host);
   }
   return host;
@@ -53,25 +48,30 @@ function ensureFrameHost() {
 
 export function clearDynamicBackground() {
   cleanupBlobUrl();
-  const host = document.getElementById("iwonder-bg-frame");
-  if (host) {
-    host.remove();
+  if (typeof activeUnmount === "function") {
+    try {
+      activeUnmount();
+    } catch (e) {
+      console.error("Error unmounting background:", e);
+    }
+    activeUnmount = null;
   }
+  const host = document.getElementById("iwonder-background-host");
+  if (host) host.innerHTML = "";
 }
 
 export function renderDynamicBackground(index) {
-  cleanupBlobUrl();
+  clearDynamicBackground();
   document.body.style.removeProperty("background-image");
+  const host = ensureBackgroundHost();
 
-  const safeIndex = (index >= 0 && index < DYNAMIC_BACKGROUNDS.length)
+  const safeIndex = (index >= 0 && index < DYNAMIC_BACKGROUND_MODULES.length)
     ? index
-    : Math.floor(Math.random() * DYNAMIC_BACKGROUNDS.length);
+    : Math.floor(Math.random() * DYNAMIC_BACKGROUND_MODULES.length);
 
-  const target = DYNAMIC_BACKGROUNDS[safeIndex];
-  console.log(`[iWonder] Activated dynamic background (${safeIndex + 1}/${DYNAMIC_BACKGROUNDS.length}): ${target.name}`);
-
-  const frame = ensureFrameHost();
-  frame.src = target.url;
+  const target = DYNAMIC_BACKGROUND_MODULES[safeIndex];
+  console.log(`[iWonder] Activated dynamic background: ${target.name}`);
+  activeUnmount = target.mount(host);
   return target;
 }
 
@@ -80,19 +80,21 @@ export function renderDynamicBackground(index) {
  */
 export async function selectRandomBackground(imagePath = "", imageNameList = []) {
   const m = Array.isArray(imageNameList) ? imageNameList.length : 0;
-  const n = DYNAMIC_BACKGROUNDS.length; // 5
+  const n = DYNAMIC_BACKGROUND_MODULES.length; // 5
 
   if (!imagePath || m === 0) {
+    // 纯动态五选一
     const dynIndex = Math.floor(Math.random() * n);
     renderDynamicBackground(dynIndex);
-    return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUNDS[dynIndex] };
+    return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex] };
   }
 
+  // (m + n) 取一
   const total = m + n;
   const pick = Math.floor(Math.random() * total);
 
   if (pick < m) {
-    // 选中本地图片
+    // 选中小图库图片
     const chosenImage = imageNameList[pick];
     console.log(`[iWonder] Selected local image (${pick + 1}/${m}): ${chosenImage}`);
 
@@ -122,6 +124,6 @@ export async function selectRandomBackground(imagePath = "", imageNameList = [])
     // 选中动态背景套件
     const dynIndex = pick - m;
     renderDynamicBackground(dynIndex);
-    return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUNDS[dynIndex] };
+    return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex] };
   }
 }
