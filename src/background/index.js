@@ -2,23 +2,23 @@
  * @file background/index.js
  * @description iWonder 背景管理调度器
  * 
- * 核心设计：
- * 1. 彻底弃用外部 iframe，所有 5 套背景全部作为直挂 DOM 的 ES Module 运行在 tab.html 中。
- * 2. 保证 tab.html 的鼠标事件（右键显示/隐藏搜索框、滚轮中键隐藏、键盘输入）100% 畅通稳定。
- * 3. 采用 (m + n) 取 1 随机算法，若未设图片目录则在 5 套动态背景中五选一。
+ * 现保留 3 套高质感、高稳定性的纯 Canvas 动态背景：
+ * 1. 01-symbols-network: 04 几何符文矩阵 + 01 粒子引力网络（莫兰迪/深海优雅渐变，每次打开随机配色）
+ * 2. 04-noise-neural-grid: 02 电影胶片噪点 + 08 神经光栅交互（暗夜微光背景）
+ * 3. 05-random-particles: 06 动态粒子聚散系统（鼠标距离感应放大，深邃星空渐变）
+ * 
+ * 调度规则：
+ * - 未设置图片目录时：在 3 套动态背景中等概率三选一。
+ * - 设置图片目录时：目录图片数 m，动态背景 3 套 (n=3)，全池 (m + 3) 等概率取一。
  */
 
 import { mount as mountSymbolsNetwork } from "./01-symbols-network.js";
-import { mount as mountKaleidoscope } from "./02-kaleidoscope.js";
-import { mount as mountSakuraWebGL } from "./03-sakura-webgl.js";
 import { mount as mountNoiseNeuralGrid } from "./04-noise-neural-grid.js";
 import { mount as mountRandomParticles } from "./05-random-particles.js";
 import { getDirectoryHandle, verifyPermission } from "./storage.js";
 
 export const DYNAMIC_BACKGROUND_MODULES = [
   { id: "symbols-network", name: "01 几何符文与引力网络", mount: mountSymbolsNetwork },
-  { id: "kaleidoscope", name: "02 原版折射万花筒", mount: mountKaleidoscope },
-  { id: "sakura-webgl", name: "03 原版 WebGL 景深飘落樱花", mount: mountSakuraWebGL },
   { id: "noise-neural-grid", name: "04 胶片噪点与神经光栅", mount: mountNoiseNeuralGrid },
   { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles }
 ];
@@ -62,7 +62,6 @@ export function clearDynamicBackground() {
 
 export function renderDynamicBackground(index) {
   clearDynamicBackground();
-  // 关键：清空 body 自带的遮挡背景色，保证 WebGL / Canvas / 万花筒通透裸露渲染
   document.body.style.removeProperty("background-image");
   document.body.style.backgroundColor = "transparent";
   const host = ensureBackgroundHost();
@@ -72,20 +71,20 @@ export function renderDynamicBackground(index) {
     : Math.floor(Math.random() * DYNAMIC_BACKGROUND_MODULES.length);
 
   const target = DYNAMIC_BACKGROUND_MODULES[safeIndex];
-  console.log(`[iWonder] Activated dynamic background: ${target.name}`);
+  console.log(`[iWonder] Activated dynamic background (${safeIndex + 1}/${DYNAMIC_BACKGROUND_MODULES.length}): ${target.name}`);
   activeUnmount = target.mount(host);
   return target;
 }
 
 /**
- * (m + n) 取 1 随机算法
+ * (m + n) 取 1 随机算法，当前 n = 3
  */
 export async function selectRandomBackground(imagePath = "", imageNameList = []) {
   const m = Array.isArray(imageNameList) ? imageNameList.length : 0;
-  const n = DYNAMIC_BACKGROUND_MODULES.length; // 5
+  const n = DYNAMIC_BACKGROUND_MODULES.length; // 3
 
   if (!imagePath || m === 0) {
-    // 纯动态五选一
+    // 纯动态三选一
     const dynIndex = Math.floor(Math.random() * n);
     renderDynamicBackground(dynIndex);
     return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex] };
