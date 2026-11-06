@@ -47,6 +47,7 @@ def main():
 
     # 收集 background 模块文件
     bg_files = [
+        "storage.js",
         "01-symbols-network.js",
         "02-kaleidoscope.js",
         "03-sakura-webgl.js",

@@ -87,6 +87,8 @@ function dbSet(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+import { saveDirectoryHandle, clearDirectoryHandle } from "./background/storage.js";
+
 /**
  * Opens a directory picker and returns a list of image file names.
  * @returns {Promise<string[]|undefined>} A promise that resolves to a list of image names, or undefined if the user cancels.
@@ -95,6 +97,9 @@ async function getImageNameList() {
   try {
     // Show the directory picker to the user
     const dirHandle = await window.showDirectoryPicker();
+    // 将句柄保存在 IndexedDB 中，使扩展环境下次能直接静默访问该目录下的图片
+    await saveDirectoryHandle(dirHandle);
+
     const imageNameList = [];
 
     // Iterate over the files in the selected directory
@@ -105,7 +110,8 @@ async function getImageNameList() {
         (entry.name.endsWith(".jpg") ||
           entry.name.endsWith(".jpeg") ||
           entry.name.endsWith(".png") ||
-          entry.name.endsWith(".gif"))
+          entry.name.endsWith(".gif") ||
+          entry.name.endsWith(".webp"))
       ) {
         imageNameList.push(entry.name);
       }
@@ -332,10 +338,11 @@ classHandler(`.cancel-button`).addEventListener("click", (event) => {
   settingsModeExit();
 });
 
-classHandler(`.reset-button`).addEventListener("click", (event) => {
+classHandler(`.reset-button`).addEventListener("click", async (event) => {
   // Reset to default settings
   dbSet("imagePath", "");
   dbSet("imageNameList", "");
+  await clearDirectoryHandle();
   // Set a new random background image
   randomBackgroundImageSet();
   settingsModeExit();
