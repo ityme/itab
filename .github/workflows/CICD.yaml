@@ -44,12 +44,8 @@ jobs:
       - name: build release assets
         run: |
           mkdir -p _temp_release_assets/
-          # 1. 编译独立单文件版 itab.html
-          cd _temp_workspace
-          python3 integrate.py
-          mv itab.html ../_temp_release_assets/
-          # 2. 打包 Edge / Chrome 扩展 zip
-          cd src
+          # 打包 Edge / Chrome 扩展 zip
+          cd _temp_workspace/src
           zip -r ../../_temp_release_assets/iwonder-tab-edge-extension.zip ./*
           cd ../..
 
