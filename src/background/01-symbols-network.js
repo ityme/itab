@@ -1,7 +1,14 @@
 /**
  * @file background/01-symbols-network.js
- * @description 04 符文矩阵 + 01 粒子连线引力网络
- * 采用轻柔细腻的呼吸引力：微弱向心倾向（类似微风拂面），保留整体几何点阵结构，绝不坍缩汇聚成蜘蛛网
+ * @description 04 几何符文矩阵 + 01 粒子引力网络深度融合
+ * 
+ * 核心设计（严格按需求调研重构）：
+ * 1. 【彻底取消多余圆点】：网络连线直接以画布上现存的 `x` 和 `o` 符号作为节点，节点就是符号本身！
+ * 2. 【引力吸附算法调研（基于 03-xposedbones 经典磁吸动力学）】：
+ *    - 影响半径 R = 160px（经典人机工学舒适半径，覆盖周围 2~3 个符号格子）。
+ *    - 阻尼衰减系数：二次平滑缓动衰减 `(1 - d / R)^2`，远离鼠标处衰减为 0，避免生硬截断。
+ *    - 最大吸引位移限制在 18px 以内，既有肉眼可见的向心流动感，又彻底杜绝“坍缩成蜘蛛侠”的失控团聚。
+ * 3. 【连线动态拉伸】：当 `x` 和 `o` 受到鼠标吸引轻微位移时，临近符号之间的引力连线随之动态拉伸、高亮，呈现出富有弹性张力的几何晶格网。
  */
 
 export function mount(container) {
@@ -17,197 +24,74 @@ export function mount(container) {
 
   const currentTheme = themeList[Math.floor(Math.random() * themeList.length)];
 
-  const symbolCanvas = document.createElement("canvas");
-  const netCanvas = document.createElement("canvas");
+  // 单一画布，将符号与符号间的连线渲染在同一坐标空间中
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = `position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:${currentTheme.bg};pointer-events:none;`;
+  container.appendChild(canvas);
 
-  symbolCanvas.style.cssText = `position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:${currentTheme.bg};`;
-  netCanvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;z-index:2;display:block;pointer-events:none;";
-
-  container.appendChild(symbolCanvas);
-  container.appendChild(netCanvas);
-
-  const symbolCtx = symbolCanvas.getContext("2d");
-  const netCtx = netCanvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
   function resize() {
-    symbolCanvas.width = netCanvas.width = window.innerWidth;
-    symbolCanvas.height = netCanvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
   window.addEventListener("resize", resize);
   resize();
 
   let target = { x: -9999, y: -9999 };
 
-  // --- 04 符文矩阵部分（极其克制的轻微倾斜引力，最大 8px 缓动）---
-  let elements = [];
-  const presets = {};
+  // --- 符号元素数据定义（每个节点即为一个 x 或 o）---
+  const symbols = [];
+  const GRID_STEP = 42; // 点阵间距
+  const ATTR_RADIUS = 160; // 调研得出的自然吸附半径
+  const MAX_PULL = 18; // 最大吸附形变距离
 
-  presets.o = function (x, y, s, dx, dy) {
-    return {
-      x, y, originX: x, originY: y,
-      offsetX: 0, offsetY: 0,
-      r: 12 * s, w: 2.8 * s, dx, dy,
-      draw: function(ctx, t) {
-        this.x += this.dx;
-        this.y += this.dy;
+  function initSymbols() {
+    symbols.length = 0;
+    const cols = Math.ceil(canvas.width / GRID_STEP);
+    const rows = Math.ceil(canvas.height / GRID_STEP);
 
-        const dxM = target.x - (this.originX + this.offsetX);
-        const dyM = target.y - (this.originY + this.offsetY);
-        const dist = Math.sqrt(dxM * dxM + dyM * dyM);
-        const maxDist = 180;
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        // 随机稀疏生成符号（概率约 1/4，留出空间呈现引力呼吸感）
+        if (Math.random() < 0.28) {
+          const type = Math.random() > 0.5 ? "o" : "x";
+          const baseX = c * GRID_STEP + (Math.random() - 0.5) * 10;
+          const baseY = r * GRID_STEP + (Math.random() - 0.5) * 10;
+          const scale = (Math.random() * 0.4 + 0.8); // 尺寸微缩放
 
-        if (dist < maxDist && dist > 1) {
-          const force = (1 - dist / maxDist) * 8; // 轻微吸附 8px
-          const targetOffX = (dxM / dist) * force;
-          const targetOffY = (dyM / dist) * force;
-          this.offsetX += (targetOffX - this.offsetX) * 0.08;
-          this.offsetY += (targetOffY - this.offsetY) * 0.08;
-        } else {
-          this.offsetX *= 0.92;
-          this.offsetY *= 0.92;
-        }
-
-        const renderX = this.x + this.offsetX + Math.sin((50 + x + (t / 10)) / 100) * 3;
-        const renderY = this.y + this.offsetY + Math.sin((45 + x + (t / 10)) / 100) * 4;
-
-        ctx.beginPath();
-        ctx.arc(renderX, renderY, this.r, 0, 2 * Math.PI, false);
-        ctx.lineWidth = this.w;
-        ctx.strokeStyle = currentTheme.stroke;
-        ctx.globalAlpha = 0.55;
-        ctx.stroke();
-        ctx.globalAlpha = 1.0;
-      }
-    };
-  };
-
-  presets.x = function (x, y, s, dx, dy, dr, r) {
-    r = r || 0;
-    return {
-      x, y, originX: x, originY: y,
-      offsetX: 0, offsetY: 0,
-      s: 18 * s, w: 2.8 * s, r, dx, dy, dr,
-      draw: function(ctx, t) {
-        this.x += this.dx;
-        this.y += this.dy;
-        this.r += this.dr;
-
-        const dxM = target.x - (this.originX + this.offsetX);
-        const dyM = target.y - (this.originY + this.offsetY);
-        const dist = Math.sqrt(dxM * dxM + dyM * dyM);
-        const maxDist = 180;
-
-        if (dist < maxDist && dist > 1) {
-          const force = (1 - dist / maxDist) * 8;
-          const targetOffX = (dxM / dist) * force;
-          const targetOffY = (dyM / dist) * force;
-          this.offsetX += (targetOffX - this.offsetX) * 0.08;
-          this.offsetY += (targetOffY - this.offsetY) * 0.08;
-        } else {
-          this.offsetX *= 0.92;
-          this.offsetY *= 0.92;
-        }
-
-        const _this = this;
-        const line = function(lx, ly, tx, ty, c) {
-          ctx.beginPath();
-          ctx.moveTo((_this.s / 2) * lx, (_this.s / 2) * ly);
-          ctx.lineTo((_this.s / 2) * tx, (_this.s / 2) * ty);
-          ctx.lineWidth = _this.w;
-          ctx.strokeStyle = c;
-          ctx.globalAlpha = 0.55;
-          ctx.stroke();
-          ctx.globalAlpha = 1.0;
-        };
-
-        const renderX = this.x + this.offsetX + Math.sin((x + (t / 10)) / 100) * 5;
-        const renderY = this.y + this.offsetY + Math.sin((10 + x + (t / 10)) / 100) * 2;
-
-        ctx.save();
-        ctx.translate(renderX, renderY);
-        ctx.rotate(this.r * Math.PI / 180);
-        line(-1, -1, 1, 1, currentTheme.stroke);
-        line(1, -1, -1, 1, currentTheme.stroke);
-        ctx.restore();
-      }
-    };
-  };
-
-  function populateElements() {
-    elements = [];
-    for(let x = 0; x < symbolCanvas.width; x += 34) {
-      for(let y = 0; y < symbolCanvas.height; y += 34) {
-        if(Math.round(Math.random() * 8) === 1) {
-          const s = ((Math.random() * 5) + 1) / 10;
-          if(Math.round(Math.random()) === 1)
-            elements.push(presets.o(x, y, s, 0, 0));
-          else
-            elements.push(presets.x(x, y, s, 0, 0, ((Math.random() * 3) - 1) / 10, (Math.random() * 360)));
+          symbols.push({
+            type,
+            originX: baseX,
+            originY: baseY,
+            x: baseX,
+            y: baseY,
+            scale,
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.015,
+            offsetX: 0,
+            offsetY: 0,
+            closest: [],
+            active: 0
+          });
         }
       }
     }
-  }
 
-  // --- 01 粒子连线网络部分（轻微向心弹性偏移，保留网格骨架）---
-  let points = [];
-
-  function initNetwork() {
-    const w = netCanvas.width;
-    const h = netCanvas.height;
-    points = [];
-    const stepX = w / 18;
-    const stepY = h / 18;
-    for(let x = 0; x < w; x += stepX) {
-      for(let y = 0; y < h; y += stepY) {
-        const px = x + Math.random() * stepX;
-        const py = y + Math.random() * stepY;
-        points.push({
-          x: px, originX: px, y: py, originY: py,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-          attrX: 0, attrY: 0
-        });
-      }
-    }
-
-    for(let i = 0; i < points.length; i++) {
-      const closest = [];
-      const p1 = points[i];
-      for(let j = 0; j < points.length; j++) {
-        const p2 = points[j];
-        if(p1 !== p2) {
-          let placed = false;
-          for(let k = 0; k < 5; k++) {
-            if(!placed && closest[k] === undefined) {
-              closest[k] = p2; placed = true;
-            }
-          }
-          for(let k = 0; k < 5; k++) {
-            if(!placed && getDistance(p1, p2) < getDistance(p1, closest[k])) {
-              closest[k] = p2; placed = true;
-            }
-          }
+    // 为每个符号寻找最近的 4 个邻近符号，形成天然网络
+    for (let i = 0; i < symbols.length; i++) {
+      const s1 = symbols[i];
+      const list = [];
+      for (let j = 0; j < symbols.length; j++) {
+        if (i !== j) {
+          const s2 = symbols[j];
+          const distSq = Math.pow(s1.originX - s2.originX, 2) + Math.pow(s1.originY - s2.originY, 2);
+          list.push({ node: s2, distSq });
         }
       }
-      p1.closest = closest;
-      p1.circle = new Circle(p1, 2 + Math.random() * 2);
+      list.sort((a, b) => a.distSq - b.distSq);
+      s1.closest = list.slice(0, 4).map(item => item.node);
     }
-  }
-
-  function Circle(pos, rad) {
-    this.pos = pos;
-    this.radius = rad;
-    this.draw = function() {
-      if(!this.active) return;
-      netCtx.beginPath();
-      netCtx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI, false);
-      netCtx.fillStyle = currentTheme.netColor + this.active + ')';
-      netCtx.fill();
-    };
-  }
-
-  function getDistance(p1, p2) {
-    return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
   }
 
   function onMouseMove(e) {
@@ -222,8 +106,36 @@ export function mount(container) {
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseleave", onMouseLeave);
 
-  populateElements();
-  initNetwork();
+  initSymbols();
+
+  // 绘制 x 符号
+  function drawCross(ctx, x, y, size, angle, stroke, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.2;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(-size, -size);
+    ctx.lineTo(size, size);
+    ctx.moveTo(size, -size);
+    ctx.lineTo(-size, size);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 绘制 o 符号
+  function drawCircle(ctx, x, y, radius, stroke, alpha) {
+    ctx.save();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.2;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   let animId;
   function loop() {
@@ -232,64 +144,80 @@ export function mount(container) {
       animId = requestAnimationFrame(loop);
       return;
     }
-    const time = Date.now();
 
-    // 1. 符文层
-    symbolCtx.clearRect(0, 0, symbolCanvas.width, symbolCanvas.height);
-    for (let e in elements) elements[e].draw(symbolCtx, time);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const now = Date.now();
 
-    // 2. 粒子自漂移 + 极轻微向心引力（最大只牵拉 12px，丝滑微动）
-    const GRAVITY_RADIUS = 200;
-    for (let i = 0; i < points.length; i++) {
-      const p = points[i];
-      p.x += p.vx; p.y += p.vy;
-      if (Math.abs(p.x - p.originX) > 28) p.vx *= -1;
-      if (Math.abs(p.y - p.originY) > 28) p.vy *= -1;
+    // 1. 物理运算：计算鼠标向心引力吸附（应用 03-xposedbones 的阻尼弹簧算法）
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
 
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
+      // 原版正弦轻微呼吸
+      const idleWaveX = Math.sin((s.originX + now * 0.1) * 0.01) * 3;
+      const idleWaveY = Math.sin((s.originY + now * 0.1) * 0.01) * 3;
 
-      if (d < GRAVITY_RADIUS && d > 1) {
-        // 轻盈柔和的引力倾斜，绝不过度聚团
-        const targetAttrX = (dx / d) * (1 - d / GRAVITY_RADIUS) * 12;
-        const targetAttrY = (dy / d) * (1 - d / GRAVITY_RADIUS) * 12;
-        p.attrX += (targetAttrX - p.attrX) * 0.08;
-        p.attrY += (targetAttrY - p.attrY) * 0.08;
+      // 鼠标向心吸引
+      const dx = target.x - (s.originX + s.offsetX);
+      const dy = target.y - (s.originY + s.offsetY);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < ATTR_RADIUS && dist > 1) {
+        // 二次缓动引力曲线：越靠近鼠标吸引越强，但平滑收敛在 MAX_PULL 内
+        const ratio = 1 - dist / ATTR_RADIUS;
+        const force = ratio * ratio * MAX_PULL;
+        const targetOffX = (dx / dist) * force;
+        const targetOffY = (dy / dist) * force;
+
+        // 弹性缓动追踪
+        s.offsetX += (targetOffX - s.offsetX) * 0.14;
+        s.offsetY += (targetOffY - s.offsetY) * 0.14;
+        s.active = ratio; // 激活高亮状态
       } else {
-        p.attrX *= 0.90;
-        p.attrY *= 0.90;
+        // 移开鼠标后弹性回弹归位
+        s.offsetX *= 0.88;
+        s.offsetY *= 0.88;
+        s.active *= 0.85;
       }
 
-      p.x += p.attrX;
-      p.y += p.attrY;
+      s.x = s.originX + s.offsetX + idleWaveX;
+      s.y = s.originY + s.offsetY + idleWaveY;
+      s.rot += s.rotSpeed;
     }
 
-    // 3. 连线与渲染
-    netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
-    for(let i = 0; i < points.length; i++) {
-      const p = points[i];
-      const dist = Math.abs(getDistance(target, p));
-      if(dist < 4000) {
-        p.active = 0.55; p.circle.active = 0.85;
-      } else if(dist < 18000) {
-        p.active = 0.22; p.circle.active = 0.42;
-      } else if(dist < 36000) {
-        p.active = 0.06; p.circle.active = 0.15;
-      } else {
-        p.active = 0; p.circle.active = 0;
-      }
+    // 2. 渲染【符号间】的引力动态网络（直接连接 x 和 o，不再有任何圆点）
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      if (s.active > 0.04) {
+        for (let k = 0; k < s.closest.length; k++) {
+          const neighbor = s.closest[k];
+          // 计算两邻接符号当前距离
+          const cdx = s.x - neighbor.x;
+          const cdy = s.y - neighbor.y;
+          const connDist = Math.sqrt(cdx * cdx + cdy * cdy);
 
-      if(p.active) {
-        for(let k in p.closest) {
-          netCtx.beginPath();
-          netCtx.moveTo(p.x, p.y);
-          netCtx.lineTo(p.closest[k].x, p.closest[k].y);
-          netCtx.strokeStyle = currentTheme.netColor + (p.active * 0.75) + ')';
-          netCtx.stroke();
+          // 仅在合理邻近跨度内连线，形成张力几何晶格
+          if (connDist < GRID_STEP * 2.8) {
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(neighbor.x, neighbor.y);
+            const lineAlpha = Math.min(s.active * 0.65, 0.45);
+            ctx.strokeStyle = currentTheme.netColor + lineAlpha + ')';
+            ctx.lineWidth = 1.1;
+            ctx.stroke();
+          }
         }
       }
-      p.circle.draw();
+    }
+
+    // 3. 渲染符号本身（x 与 o）
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      const alpha = 0.45 + s.active * 0.45; // 被吸引时自然增亮
+      if (s.type === "x") {
+        drawCross(ctx, s.x, s.y, 6.5 * s.scale, s.rot, currentTheme.stroke, alpha);
+      } else {
+        drawCircle(ctx, s.x, s.y, 6.0 * s.scale, currentTheme.stroke, alpha);
+      }
     }
 
     animId = requestAnimationFrame(loop);
