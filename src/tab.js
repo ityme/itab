@@ -121,28 +121,22 @@ async function getImageNameList() {
   }
 }
 
+import { selectRandomBackground } from "./background/index.js";
+
 /**
- * Sets a random background image from the user-selected folder.
+ * Sets a random background image from the user-selected folder,
+ * or selects one of the 5 built-in dynamic background modules.
+ * If folder has m images, pool size is m + 5, equal probability.
+ * If no folder, randomly picks 1 of the 5 dynamic backgrounds.
  */
 function randomBackgroundImageSet() {
-  let imagePath = dbGet("imagePath") || "";
-  let imageNameList = dbGet("imageNameList") || [];
-  // If no image path or list is set, do nothing
-  if (imagePath === "" || imageNameList.length === 0) {
-    console.log("no background image path or list found.");
-    classHandler(`body`).style.removeProperty("background-image");
-    return null;
-  }
-  // Select a random image from the list
-  let index = Math.floor(Math.random() * imageNameList.length);
-  let path = imagePath + imageNameList[index];
-  console.log("current background image:", path);
+  const imagePath = dbGet("imagePath") || "";
+  const imageNameList = dbGet("imageNameList") || [];
   try {
-    // Set the background image of the body
-    classHandler(`body`).style.backgroundImage = `url("file:///${path}")`;
+    return selectRandomBackground(imagePath, imageNameList);
   } catch (error) {
-    console.error("Error setting background image:", error);
-    alert("Cannot load background image, please check the path settings.");
+    console.error("Error setting random background:", error);
+    return null;
   }
 }
 

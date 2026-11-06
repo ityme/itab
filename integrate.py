@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 
-def replace_placeholder(html, kind, content, tag):
+def replace_placeholder(html, kind, content, tag, attrs=""):
     start = f"<!-- INTEGRATE:{kind}:START -->"
     end = f"<!-- INTEGRATE:{kind}:END -->"
     start_count = html.count(start)
@@ -25,7 +25,8 @@ def replace_placeholder(html, kind, content, tag):
     if start_index >= end_index:
         raise ValueError(f"{kind} placeholder end must follow its start")
 
-    block = f"{start}\n<{tag}>\n{content.rstrip()}\n</{tag}>\n{end}"
+    attr_str = f" {attrs}" if attrs else ""
+    block = f"{start}\n<{tag}{attr_str}>\n{content.rstrip()}\n</{tag}>\n{end}"
     return html[:start_index] + block + html[end_index + len(end):]
 
 
@@ -44,12 +45,31 @@ def main():
     css_path = ROOT / "src/tab.css"
     js_path = ROOT / "src/tab.js"
 
+    # 收集 background 模块文件
+    bg_files = [
+        "01-symbols-network.js",
+        "02-kaleidoscope.js",
+        "03-sakura-webgl.js",
+        "04-noise-neural-grid.js",
+        "05-random-particles.js",
+        "index.js"
+    ]
+    bundled_modules = []
+    for bf in bg_files:
+        bf_path = ROOT / "src/background" / bf
+        if bf_path.exists():
+            mod_code = bf_path.read_text(encoding="utf-8")
+            bundled_modules.append(f"// --- MODULE: {bf} ---\n{mod_code}")
+
     try:
         html = html_path.read_text(encoding="utf-8")
         css = css_path.read_text(encoding="utf-8")
         js = js_path.read_text(encoding="utf-8")
+
+        # 将模块内联打包
+        bundled_js = "\n\n".join(bundled_modules) + "\n\n// --- MAIN TAB LOGIC ---\n" + js.replace('import { selectRandomBackground } from "./background/index.js";', '// inlined selectRandomBackground')
         html = replace_placeholder(html, "CSS", css, "style")
-        html = replace_placeholder(html, "JS", js, "script")
+        html = replace_placeholder(html, "JS", bundled_js, "script", attrs='type="module"')
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
