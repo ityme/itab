@@ -203,7 +203,23 @@ export function mount(container) {
     return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
   }
 
+  let isWindowFocused = document.hasFocus();
+
+  function resetFocus() {
+    target.x = -9999;
+    target.y = -9999;
+    lastPos.x = -9999;
+    lastPos.y = -9999;
+    mouseSpeed = 0;
+    isWindowFocused = false;
+  }
+
+  function onFocus() {
+    isWindowFocused = true;
+  }
+
   function onMouseMove(e) {
+    if (!isWindowFocused) isWindowFocused = true;
     const now = performance.now();
     const dt = Math.max(now - lastMoveTime, 1);
     const distMoved = Math.hypot(e.clientX - lastPos.x, e.clientY - lastPos.y);
@@ -222,15 +238,17 @@ export function mount(container) {
   }
 
   function onMouseLeave() {
-    target.x = -9999;
-    target.y = -9999;
-    lastPos.x = -9999;
-    lastPos.y = -9999;
-    mouseSpeed = 0;
+    resetFocus();
   }
 
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseleave", onMouseLeave);
+  window.addEventListener("blur", resetFocus);
+  window.addEventListener("focus", onFocus);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) resetFocus();
+    else isWindowFocused = document.hasFocus();
+  });
 
   initConstellation();
   populateElements();
@@ -378,6 +396,8 @@ export function mount(container) {
     window.removeEventListener("resize", resize);
     window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("mouseleave", onMouseLeave);
+    window.removeEventListener("blur", resetFocus);
+    window.removeEventListener("focus", onFocus);
     container.innerHTML = "";
   };
 }
