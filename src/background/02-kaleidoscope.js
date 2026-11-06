@@ -1,49 +1,65 @@
 /**
  * @file background/02-kaleidoscope.js
  * @description 10 原版完整万花筒折射结构
- * 纯 JS 模块化挂载到 tab.html，无需 iframe。
- * 纹理内置于本地 assets/kaleido-texture.svg，绝无 404 失效问题，完整保留原版 12 段折射与全向鼠标控制。
+ * 
+ * 还原原作者全部视觉层级：
+ * 1. 经典细线 SVG 浅蓝网格底纹
+ * 2. 居中的优雅花束图层（使用内置高清 bouquet.svg 代替 404 死链）
+ * 3. 经典的 7~12 段折射万花筒圆盘（使用内置高密折射纹理 caroussel.svg）
+ * 4. 完整的全向鼠标位移流转公式
  */
 
 export function mount(container) {
   let disposed = false;
 
-  const wrap = document.createElement("div");
-  wrap.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at center, #182c2a 0%, #0c1816 65%, #050b0a 100%);user-select:none;pointer-events:none;";
+  const bouquetUrl = chrome.runtime?.getURL ? chrome.runtime.getURL("background/assets/bouquet.svg") : "background/assets/bouquet.svg";
+  const carousselUrl = chrome.runtime?.getURL ? chrome.runtime.getURL("background/assets/caroussel.svg") : "background/assets/caroussel.svg";
 
-  // SVG 坐标网格背景
+  const wrap = document.createElement("div");
+  wrap.style.cssText = `
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0b1216;
+    user-select: none;
+    pointer-events: none;
+  `;
+
+  // 1. 原版 SVG 坐标浅蓝网格 + 2. 原版中心花束背景 + 3. 万花筒圆盘
   wrap.innerHTML = `
-    <svg style="position:absolute;z-index:1;width:100%;height:100%;top:0;left:0;opacity:0.32;pointer-events:none;">
+    <svg style="position:absolute;z-index:1;width:100%;height:100%;top:0;left:0;pointer-events:none;">
       <defs>
-        <pattern id="k-grid-pattern" width="28" height="28" patternUnits="userSpaceOnUse">
-          <rect x="0" y="0" width="28" height="28" fill="none" stroke="#25554d" stroke-width="0.75" />
+        <pattern id="k-orig-grid" width="14" height="14" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="14" height="14" fill="none" stroke="rgba(173, 216, 230, 0.45)" stroke-width="0.8" />
         </pattern>
       </defs>
-      <rect x="0" y="0" width="100%" height="100%" fill="url(#k-grid-pattern)" />
+      <rect x="0" y="0" width="100%" height="100%" fill="url(#k-orig-grid)" />
     </svg>
-    <div class="k-disk-host" style="width:58vh;height:58vh;background:hsla(180,100%,10%,0.2);box-shadow:0 0 14vh 16vh rgba(8,30,26,0.7);border-radius:50%;position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);border:1px solid rgba(50,230,197,0.25);"></div>
+
+    <!-- 原版花束层 -->
+    <div style="position:absolute;inset:0;width:100%;height:100%;z-index:2;background:url('${bouquetUrl}') no-repeat center 15vh;background-size:min(90vh, 700px);opacity:0.95;pointer-events:none;"></div>
+
+    <!-- 原版万花筒折射盘 -->
+    <div class="k-disk-host" style="width:32vh;height:32vh;background:hsla(180,100%,10%,.12);box-shadow:0 0 8vh 12vh hsla(180,100%,10%,.2);border-radius:100%;position:absolute;z-index:3;top:50%;left:50%;transform:translate(-50%,-10%);"></div>
   `;
 
   container.appendChild(wrap);
 
   const disk = wrap.querySelector(".k-disk-host");
-  const textureUrl = chrome.runtime?.getURL ? chrome.runtime.getURL("background/assets/kaleido-texture.svg") : "background/assets/kaleido-texture.svg";
 
-  // 构建 12 段（24 个切片）对称折射矩阵
+  // 原版采用 7 段对称（生成 14 个 tile）
+  const n = 7;
   let tilesHtml = "";
-  const rotations = [
-    "0deg", "30deg", "60deg", "90deg", "120deg", "150deg",
-    "180deg", "210deg", "240deg", "270deg", "300deg", "330deg"
-  ];
+  const step = 360 / n;
 
-  for (let i = 0; i < 12; i++) {
-    const rot = rotations[i];
+  for (let i = 0; i <= n * 2; i++) {
+    const angle = (i * step * 0.5);
+    const transform = (i % 2 === 1) ? `scale(-1, 1) rotate(${angle}deg)` : `rotate(${angle}deg)`;
     tilesHtml += `
-      <div style="position:absolute;top:50%;left:0;height:100%;width:50%;overflow:hidden;transform-origin:right top;transform:rotate(${rot});">
-        <div class="k-slice" style="position:relative;top:0;left:100%;height:100%;width:100%;background-image:url('${textureUrl}');background-size:280px 280px;transform-origin:left top;"></div>
-      </div>
-      <div style="position:absolute;top:50%;left:0;height:100%;width:50%;overflow:hidden;transform-origin:right top;transform:scale(-1,1) rotate(${rot});">
-        <div class="k-slice" style="position:relative;top:0;left:100%;height:100%;width:100%;background-image:url('${textureUrl}');background-size:280px 280px;transform-origin:left top;"></div>
+      <div style="position:absolute;top:50%;left:0;height:100%;width:50%;overflow:hidden;transform-origin:right top;transform:${transform};">
+        <div class="k-slice" style="position:relative;top:0;left:100%;height:100%;width:100%;background-image:url('${carousselUrl}');background-size:320px 320px;transform-origin:left top;transform:rotate(${angle}deg);"></div>
       </div>
     `;
   }
@@ -52,12 +68,13 @@ export function mount(container) {
   const slices = disk.querySelectorAll(".k-slice");
   let x = 0, y = 0;
 
+  // 原版的流转逻辑 mode 2: nx = e.pageX, ny = -y
   function onMouseMove(e) {
     if (disposed) return;
-    x += 1.8;
-    y += 1.8;
-    const nx = e.pageX + x;
-    const ny = e.pageY - y;
+    x++;
+    y++;
+    const nx = e.pageX;
+    const ny = -y;
     const pos = `${nx}px ${ny}px`;
     for (let i = 0; i < slices.length; i++) {
       slices[i].style.backgroundPosition = pos;

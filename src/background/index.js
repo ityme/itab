@@ -62,7 +62,9 @@ export function clearDynamicBackground() {
 
 export function renderDynamicBackground(index) {
   clearDynamicBackground();
+  // 关键：清空 body 自带的遮挡背景色，保证 WebGL / Canvas / 万花筒通透裸露渲染
   document.body.style.removeProperty("background-image");
+  document.body.style.backgroundColor = "transparent";
   const host = ensureBackgroundHost();
 
   const safeIndex = (index >= 0 && index < DYNAMIC_BACKGROUND_MODULES.length)
@@ -106,6 +108,7 @@ export async function selectRandomBackground(imagePath = "", imageNameList = [])
         const file = await fileHandle.getFile();
         clearDynamicBackground();
         currentBlobUrl = URL.createObjectURL(file);
+        document.body.style.backgroundColor = "rgba(107, 107, 107, 0.65)";
         document.body.style.backgroundImage = `url("${currentBlobUrl}")`;
         loadedViaHandle = true;
       }
@@ -116,6 +119,7 @@ export async function selectRandomBackground(imagePath = "", imageNameList = [])
     if (!loadedViaHandle) {
       clearDynamicBackground();
       const fullPath = imagePath + chosenImage;
+      document.body.style.backgroundColor = "rgba(107, 107, 107, 0.65)";
       document.body.style.backgroundImage = `url("file:///${fullPath}")`;
     }
 
