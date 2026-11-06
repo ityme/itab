@@ -1,7 +1,7 @@
 /**
  * @file background/04-noise-neural-grid.js
  * @description 02 电影胶片噪点 + 08 神经光栅交互
- * @optimization 使用 128x128 预渲染离线噪点纹理全屏平铺，大幅节省 4K/2K 高分屏 CPU 算力
+ * @optimization 背景采用低调深邃的多重径向微光与暗角，不再是单调平板黑灰
  */
 
 export function mount(container) {
@@ -14,7 +14,11 @@ export function mount(container) {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: radial-gradient(circle at center, #1b2826 0%, #0d1615 60%, #060b0a 100%);
+        /* 深沉的极光暗夜微光背景，富有纵深空间感 */
+        background:
+          radial-gradient(ellipse 70% 50% at 50% 100%, rgba(20, 55, 48, 0.45) 0%, transparent 70%),
+          radial-gradient(circle at 30% 20%, rgba(14, 40, 36, 0.5) 0%, transparent 60%),
+          radial-gradient(circle at center, #0e1a18 0%, #081110 55%, #030807 100%);
       }
       .nn-grid-canvas {
         position: absolute;
@@ -31,7 +35,7 @@ export function mount(container) {
         height: 100%;
         z-index: 2;
         pointer-events: none;
-        opacity: 0.18;
+        opacity: 0.16;
       }
       .nn-vignette {
         position: absolute;
@@ -39,13 +43,13 @@ export function mount(container) {
         width: 100%;
         height: 100%;
         z-index: 3;
-        box-shadow: inset 0 0 160px 30px rgba(0, 0, 0, 0.9);
+        box-shadow: inset 0 0 180px 40px rgba(0, 0, 0, 0.95);
         pointer-events: none;
-        animation: nn-vignette-pulse 4s infinite ease-in-out;
+        animation: nn-vignette-pulse 4.5s infinite ease-in-out;
       }
       @keyframes nn-vignette-pulse {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.65; }
+        50% { opacity: 0.7; }
       }
     </style>
     <div class="nn-wrap">
@@ -59,7 +63,7 @@ export function mount(container) {
   const noiseLayer = container.querySelector(".nn-noise-layer");
   const gridCtx = gridCanvas.getContext("2d");
 
-  // --- 噪点性能优化：预生成 4 帧 128x128 噪点 Pattern 平铺 ---
+  // 预生成 4 帧 128x128 噪点 Pattern 平铺
   const NOISE_SIZE = 128;
   const noisePatterns = [];
   for (let frame = 0; frame < 4; frame++) {
@@ -70,9 +74,9 @@ export function mount(container) {
     const imgData = offCtx.createImageData(NOISE_SIZE, NOISE_SIZE);
     const buffer = new Uint32Array(imgData.data.buffer);
     for (let i = 0; i < buffer.length; i++) {
-      if (Math.random() < 0.18) {
+      if (Math.random() < 0.16) {
         const gray = (Math.random() * 255) | 0;
-        buffer[i] = (45 << 24) | (gray << 16) | (gray << 8) | gray;
+        buffer[i] = (42 << 24) | (gray << 16) | (gray << 8) | gray;
       }
     }
     offCtx.putImageData(imgData, 0, 0);
@@ -127,7 +131,6 @@ export function mount(container) {
   function render(time) {
     if (disposed) return;
 
-    // 当页面切换到后台隐藏时跳过运算，实现 0 功耗
     if (document.hidden) {
       animId = requestAnimationFrame(render);
       return;
@@ -135,7 +138,7 @@ export function mount(container) {
 
     const now = Date.now();
 
-    // 1. 切换噪点帧（控制在 ~12fps 模拟电影胶片频率，极度省电）
+    // 1. 切换噪点帧
     if (time - lastNoiseTime > 80) {
       lastNoiseTime = time;
       noiseFrame = (noiseFrame + 1) % noisePatterns.length;

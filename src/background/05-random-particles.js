@@ -1,23 +1,43 @@
 /**
  * @file background/05-random-particles.js
  * @description 06 动态粒子系统 · 鼠标距离放大 · 每次随机色系
- * @optimization 使用 requestAnimationFrame，增加页面切后台自动休眠（0 CPU 消耗）
+ * @optimization 背景采用深邃的星空极光渐变，告别纯黑死板背景；调和粒子透明度与光晕
  */
 
 export function mount(container) {
   let disposed = false;
   const themePresets = [
-    { name: "极光青绿", colors: ["#32e6c5", "#00ff87", "#60efff", "#0061ff", "#13547a"] },
-    { name: "赛博霓虹", colors: ["#ff007f", "#7928ca", "#00f0ff", "#ff0080", "#4338ca"] },
-    { name: "日落火烧云", colors: ["#ff4e50", "#f9d423", "#f857a6", "#ff5858", "#ff9900"] },
-    { name: "暗夜幽兰", colors: ["#8a2387", "#e94057", "#f27121", "#3a1c71", "#d76d77"] },
-    { name: "深海星芒", colors: ["#2193b0", "#6dd5ed", "#00c6ff", "#0072ff", "#1e3c72"] }
+    {
+      name: "翡翠极光",
+      bg: "radial-gradient(ellipse at bottom, #0a2521 0%, #061714 55%, #020908 100%)",
+      colors: ["#34d399", "#2dd4bf", "#6ee7b7", "#38bdf8", "#059669"]
+    },
+    {
+      name: "深海星芒",
+      bg: "radial-gradient(ellipse at bottom, #0c2336 0%, #081622 55%, #03080e 100%)",
+      colors: ["#38bdf8", "#60a5fa", "#818cf8", "#0284c7", "#93c5fd"]
+    },
+    {
+      name: "暗夜幽兰",
+      bg: "radial-gradient(ellipse at bottom, #21132f 0%, #130a1c 55%, #07030a 100%)",
+      colors: ["#c084fc", "#e879f9", "#f472b6", "#9333ea", "#a855f7"]
+    },
+    {
+      name: "落日余晖",
+      bg: "radial-gradient(ellipse at bottom, #2d1814 0%, #1a0d0a 55%, #0b0504 100%)",
+      colors: ["#fb923c", "#f87171", "#fbbf24", "#ea580c", "#fca5a5"]
+    },
+    {
+      name: "月影青黛",
+      bg: "radial-gradient(ellipse at bottom, #162624 0%, #0d1716 55%, #050908 100%)",
+      colors: ["#5eead4", "#99f6e4", "#2dd4bf", "#67e8f9", "#0f766e"]
+    }
   ];
 
   const currentTheme = themePresets[Math.floor(Math.random() * themePresets.length)];
 
   const canvas = document.createElement("canvas");
-  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:#080c10;";
+  canvas.style.cssText = `position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:${currentTheme.bg};`;
   container.appendChild(canvas);
 
   const ctx = canvas.getContext("2d");
@@ -69,7 +89,6 @@ export function mount(container) {
   function loop() {
     if (disposed) return;
 
-    // 当标签页切换到后台隐藏时跳过运算，实现 0 CPU 功耗
     if (document.hidden) {
       animId = requestAnimationFrame(loop);
       return;
@@ -88,10 +107,10 @@ export function mount(container) {
       ctx.strokeStyle = li.c;
 
       if (i % 2 === 0) {
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.4;
         ctx.stroke();
       } else {
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = 0.8;
         ctx.fill();
         ctx.globalAlpha = 1.0;
       }

@@ -1,10 +1,67 @@
 /**
  * @file background/02-kaleidoscope.js
- * @description 10 原版复刻万花筒折射结构
+ * @description 10 原版复刻万花筒折射结构（内置纯本地华丽花卉与折射棱镜纹理，脱离失效远程资源）
  */
 
 export function mount(container) {
   let disposed = false;
+
+  // 生成本地离线花卉图案 DataURL 作为中心万花筒图像源
+  function generateKaleidoTexture() {
+    const size = 320;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d");
+
+    // 底色
+    const g = ctx.createRadialGradient(size/2, size/2, 10, size/2, size/2, size/2);
+    g.addColorStop(0, "#295b54");
+    g.addColorStop(0.5, "#14332e");
+    g.addColorStop(1, "#0a1f1b");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+
+    // 绘制几何花瓣与棱镜放射环
+    ctx.translate(size/2, size/2);
+    const petals = 16;
+    for (let i = 0; i < petals; i++) {
+      ctx.rotate((Math.PI * 2) / petals);
+      
+      // 主花瓣
+      ctx.beginPath();
+      ctx.ellipse(60, 0, 50, 18, 0, 0, Math.PI * 2);
+      ctx.fillStyle = i % 2 === 0 ? "rgba(50, 230, 197, 0.65)" : "rgba(255, 180, 210, 0.55)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 内层细蕊
+      ctx.beginPath();
+      ctx.arc(35, 0, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 230, 120, 0.85)";
+      ctx.fill();
+
+      // 外缘折射晶格
+      ctx.beginPath();
+      ctx.rect(100, -8, 16, 16);
+      ctx.fillStyle = "rgba(100, 200, 255, 0.6)";
+      ctx.fill();
+    }
+    // 中心光核
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "#32e6c5";
+    ctx.shadowBlur = 15;
+    ctx.fill();
+
+    return c.toDataURL();
+  }
+
+  const textureUrl = generateKaleidoTexture();
+
   container.innerHTML = `
     <style>
       .k-wrap {
@@ -13,7 +70,7 @@ export function mount(container) {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #0e161b;
+        background: radial-gradient(circle at center, #1b2f2d 0%, #0c1a18 65%, #050d0c 100%);
         user-select: none;
       }
       .k-svg {
@@ -27,10 +84,10 @@ export function mount(container) {
         opacity: 0.35;
       }
       .k-disk {
-        width: 48vh;
-        height: 48vh;
-        background: hsla(180, 100%, 10%, 0.15);
-        box-shadow: 0 0 12vh 14vh hsla(180, 100%, 10%, 0.35);
+        width: 58vh;
+        height: 58vh;
+        background: hsla(180, 100%, 10%, 0.2);
+        box-shadow: 0 0 14vh 16vh rgba(8, 30, 26, 0.7);
         border-radius: 50%;
         position: absolute;
         z-index: 2;
@@ -38,6 +95,7 @@ export function mount(container) {
         left: 50%;
         transform: translate(-50%, -50%);
         pointer-events: none;
+        border: 1px solid rgba(50, 230, 197, 0.25);
       }
       .k-disk .tile {
         display: none;
@@ -55,7 +113,8 @@ export function mount(container) {
         left: 100%;
         height: 100%;
         width: 100%;
-        background-image: url('https://assets.codepen.io/194946/caroussel90.png');
+        background-image: url('${textureUrl}');
+        background-size: 260px 260px;
         transform-origin: left top;
       }
       .k-disk.n12 .tile.t0 { display: block; transform: rotate(0deg); }
@@ -86,8 +145,8 @@ export function mount(container) {
     <div class="k-wrap">
       <svg class="k-svg">
         <defs>
-          <pattern id="k-grid" width="22" height="22" patternUnits="userSpaceOnUse">
-            <rect x="0" y="0" width="22" height="22" fill="none" stroke="#2a5c54" stroke-width="0.8" />
+          <pattern id="k-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <rect x="0" y="0" width="28" height="28" fill="none" stroke="#25554d" stroke-width="0.75" />
           </pattern>
         </defs>
         <rect x="0" y="0" width="100%" height="100%" fill="url(#k-grid)" />
@@ -108,8 +167,8 @@ export function mount(container) {
 
   function onMouseMove(e) {
     if (disposed) return;
-    x += 1.5;
-    y += 1.5;
+    x += 1.8;
+    y += 1.8;
     const nx = e.pageX + x;
     const ny = e.pageY - y;
     const pos = `${nx}px ${ny}px`;
