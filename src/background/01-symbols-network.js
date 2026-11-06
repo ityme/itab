@@ -2,9 +2,11 @@
  * @file background/01-symbols-network.js
  * @description 04 符文矩阵 + 01 粒子引力网络
  * 
- * 视觉增强：微弱星座背景 (Faint Constellation Background)
- * 在最底层 Canvas 增加 35~50 颗细小的微弱星辰，随机连接成稀疏的微弱星座线条，伴随极慢的低频闪烁呼吸，
- * 彻底消除深色底色单调感，与前排几何符文形成优雅深邃的纵深空间。
+ * 彻底解决“失焦停留引力”：
+ * 1. 初始绝对不设立中心坐标（初始 target.x = -9999, target.y = -9999）。
+ * 2. 只有当用户真实在页面上产生有效交互且鼠标在窗口内部时才生效。
+ * 3. 增加鼠标静止自动衰减超时（用户鼠标只要停止移动超过 1 秒，引力立即平滑衰减为 0，不再持续吸附）。
+ * 4. 监听 blur, mouseleave, visibilitychange, pointerout, contextmenu，在任何失焦、右键菜单、切窗时强制清除目标点。
  */
 
 export function mount(container) {
@@ -20,12 +22,9 @@ export function mount(container) {
 
   const currentTheme = themeList[Math.floor(Math.random() * themeList.length)];
 
-  // 1. 最底层：微弱星座背景 Canvas
   const constellationCanvas = document.createElement("canvas");
-  constationCanvasStyle:
   constellationCanvas.style.cssText = `position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;background:${currentTheme.bg};pointer-events:none;`;
 
-  // 2. 中层与顶层：符号层与网络连线层
   const symbolCanvas = document.createElement("canvas");
   const netCanvas = document.createElement("canvas");
 
@@ -47,12 +46,54 @@ export function mount(container) {
   window.addEventListener("resize", resize);
   resize();
 
+  // 严格初始为负坐标，绝不在屏幕正中产生引力！
   let target = { x: -9999, y: -9999 };
   let lastPos = { x: -9999, y: -9999 };
-  let lastMoveTime = performance.now();
+  let lastMoveTime = 0;
   let mouseSpeed = 0;
+  let isMouseInside = false;
 
-  // --- 微弱星座背景系统 (Constellation Dust) ---
+  function resetTarget() {
+    target.x = -9999;
+    target.y = -9999;
+    lastPos.x = -9999;
+    lastPos.y = -9999;
+    mouseSpeed = 0;
+    isMouseInside = false;
+  }
+
+  function onMouseMove(e) {
+    isMouseInside = true;
+    const now = performance.now();
+    const dt = Math.max(now - lastMoveTime, 1);
+    const distMoved = Math.hypot(e.clientX - lastPos.x, e.clientY - lastPos.y);
+
+    if (lastPos.x !== -9999) {
+      const instSpeed = distMoved / dt;
+      mouseSpeed = mouseSpeed * 0.4 + instSpeed * 0.6;
+    }
+
+    lastPos.x = e.clientX;
+    lastPos.y = e.clientY;
+    lastMoveTime = now;
+
+    target.x = e.clientX;
+    target.y = e.clientY;
+  }
+
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseleave", resetTarget);
+  window.addEventListener("blur", resetTarget);
+  window.addEventListener("mouseout", (e) => {
+    if (!e.relatedTarget && !e.toElement) {
+      resetTarget();
+    }
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) resetTarget();
+  });
+
+  // --- 微弱星座背景系统 ---
   const stars = [];
   const STAR_COUNT = 45;
 
@@ -65,11 +106,11 @@ export function mount(container) {
       stars.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: Math.random() * 0.9 + 0.6, // 微小星辰半径 0.6~1.5px
-        baseAlpha: Math.random() * 0.25 + 0.15, // 微弱亮度
+        r: Math.random() * 0.9 + 0.6,
+        baseAlpha: Math.random() * 0.25 + 0.15,
         pulseSpeed: Math.random() * 0.0015 + 0.0008,
         pulseOffset: Math.random() * Math.PI * 2,
-        vx: (Math.random() - 0.5) * 0.08, // 极慢背景漂移
+        vx: (Math.random() - 0.5) * 0.08,
         vy: (Math.random() - 0.5) * 0.08
       });
     }
@@ -146,7 +187,8 @@ export function mount(container) {
   function initNetwork() {
     const w = netCanvas.width;
     const h = netCanvas.height;
-    target = { x: w / 2, y: h / 2 };
+    // 修复：初始化绝对不能把 target 设为 w/2, h/2，必须重置为负数！
+    resetTarget();
     points = [];
     const stepX = w / 18;
     const stepY = h / 18;
@@ -203,53 +245,6 @@ export function mount(container) {
     return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
   }
 
-  let isWindowFocused = document.hasFocus();
-
-  function resetFocus() {
-    target.x = -9999;
-    target.y = -9999;
-    lastPos.x = -9999;
-    lastPos.y = -9999;
-    mouseSpeed = 0;
-    isWindowFocused = false;
-  }
-
-  function onFocus() {
-    isWindowFocused = true;
-  }
-
-  function onMouseMove(e) {
-    if (!isWindowFocused) isWindowFocused = true;
-    const now = performance.now();
-    const dt = Math.max(now - lastMoveTime, 1);
-    const distMoved = Math.hypot(e.clientX - lastPos.x, e.clientY - lastPos.y);
-
-    if (lastPos.x !== -9999) {
-      const instSpeed = distMoved / dt;
-      mouseSpeed = mouseSpeed * 0.4 + instSpeed * 0.6;
-    }
-
-    lastPos.x = e.clientX;
-    lastPos.y = e.clientY;
-    lastMoveTime = now;
-
-    target.x = e.clientX;
-    target.y = e.clientY;
-  }
-
-  function onMouseLeave() {
-    resetFocus();
-  }
-
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseleave", onMouseLeave);
-  window.addEventListener("blur", resetFocus);
-  window.addEventListener("focus", onFocus);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) resetFocus();
-    else isWindowFocused = document.hasFocus();
-  });
-
   initConstellation();
   populateElements();
   initNetwork();
@@ -262,23 +257,21 @@ export function mount(container) {
       return;
     }
     const time = Date.now();
+    const nowPerf = performance.now();
 
-    // 0. 渲染微弱星座背景 (Constellation Background)
+    // 0. 星座背景
     const cw = constellationCanvas.width;
     const ch = constellationCanvas.height;
     constCtx.clearRect(0, 0, cw, ch);
 
-    // 更新并绘制星辰位置
     for (let i = 0; i < stars.length; i++) {
       const s = stars[i];
-      s.x += s.vx;
-      s.y += s.vy;
+      s.x += s.vx; s.y += s.vy;
       if (s.x < 0) s.x = cw;
       if (s.x > cw) s.x = 0;
       if (s.y < 0) s.y = ch;
       if (s.y > ch) s.y = 0;
 
-      // 柔和呼吸明暗
       const pulse = Math.sin(time * s.pulseSpeed + s.pulseOffset);
       const alpha = s.baseAlpha + pulse * 0.12;
 
@@ -288,7 +281,6 @@ export function mount(container) {
       constCtx.fill();
     }
 
-    // 星座连线：两颗星辰距离适中时产生极细微的若隐若现星座连线
     const MAX_STAR_DIST = 110;
     for (let i = 0; i < stars.length; i++) {
       const s1 = stars[i];
@@ -299,7 +291,7 @@ export function mount(container) {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < MAX_STAR_DIST) {
-          const lineAlpha = (1 - dist / MAX_STAR_DIST) * 0.12; // 极低透明度，若隐若现
+          const lineAlpha = (1 - dist / MAX_STAR_DIST) * 0.12;
           constCtx.beginPath();
           constCtx.moveTo(s1.x, s1.y);
           constCtx.lineTo(s2.x, s2.y);
@@ -310,8 +302,11 @@ export function mount(container) {
       }
     }
 
-    // 鼠标静止时速度随时间衰减
-    const idleTime = performance.now() - lastMoveTime;
+    // 鼠标静止超过 1.2 秒自动进入无吸引状态，绝不遗留吸附！
+    const idleTime = nowPerf - lastMoveTime;
+    if (idleTime > 1200) {
+      isMouseInside = false;
+    }
     if (idleTime > 60) {
       mouseSpeed *= 0.85;
     }
@@ -320,9 +315,9 @@ export function mount(container) {
     symbolCtx.clearRect(0, 0, symbolCanvas.width, symbolCanvas.height);
     for (let e in elements) elements[e].draw(symbolCtx, time);
 
-    // 2. 粒子自漂移 + 速度敏感断开的极微弱向心吸附
+    // 2. 引力计算
     const SPEED_THRESHOLD = 0.75;
-    const isAttracting = mouseSpeed < SPEED_THRESHOLD && target.x !== -9999;
+    const isAttracting = isMouseInside && mouseSpeed < SPEED_THRESHOLD && target.x > -500;
     const ATTR_RADIUS = 150;
     const MAX_PULL = 6.0;
 
@@ -351,8 +346,9 @@ export function mount(container) {
           p.attrY *= 0.88;
         }
       } else {
-        p.attrX *= 0.82;
-        p.attrY *= 0.82;
+        // 失焦、静止或移开时快速回位
+        p.attrX *= 0.80;
+        p.attrY *= 0.80;
       }
 
       p.x += p.attrX;
@@ -363,18 +359,24 @@ export function mount(container) {
     netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
     for(let i = 0; i < points.length; i++) {
       const p = points[i];
-      const dist = Math.abs(getDistance(target, p));
-      if(dist < 4000) {
-        p.active = 0.55; p.circle.active = 0.85;
-      } else if(dist < 20000) {
-        p.active = 0.25; p.circle.active = 0.45;
-      } else if(dist < 40000) {
-        p.active = 0.08; p.circle.active = 0.18;
+      // 只有在鼠标在屏幕内且产生移动时才高亮连线！失焦状态直接为 0
+      if (isAttracting) {
+        const dist = Math.abs(getDistance(target, p));
+        if(dist < 4000) {
+          p.active = 0.55; p.circle.active = 0.85;
+        } else if(dist < 20000) {
+          p.active = 0.25; p.circle.active = 0.45;
+        } else if(dist < 40000) {
+          p.active = 0.08; p.circle.active = 0.18;
+        } else {
+          p.active = 0; p.circle.active = 0;
+        }
       } else {
-        p.active = 0; p.circle.active = 0;
+        p.active *= 0.82;
+        p.circle.active *= 0.82;
       }
 
-      if(p.active) {
+      if(p.active > 0.01) {
         for(let k in p.closest) {
           netCtx.beginPath();
           netCtx.moveTo(p.x, p.y);
@@ -395,9 +397,8 @@ export function mount(container) {
     cancelAnimationFrame(animId);
     window.removeEventListener("resize", resize);
     window.removeEventListener("mousemove", onMouseMove);
-    window.removeEventListener("mouseleave", onMouseLeave);
-    window.removeEventListener("blur", resetFocus);
-    window.removeEventListener("focus", onFocus);
+    window.removeEventListener("mouseleave", resetTarget);
+    window.removeEventListener("blur", resetTarget);
     container.innerHTML = "";
   };
 }
