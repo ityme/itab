@@ -1,7 +1,14 @@
 /**
  * @file background/01-symbols-network.js
- * @description 04 符文矩阵 + 01 粒子连线引力网络
- * 模块化直挂 tab.html，无需 iframe。
+ * @description 04 符文矩阵 + 01 粒子引力网络
+ * 
+ * 动态引力（极度轻微 + 速度敏感脱缰断开机制）：
+ * 1. 【极轻微吸附】：最大偏移上限仅 6px，只产生微弱的轻浮感，不破环阵型。
+ * 2. 【速度敏感断开 (Breakaway Velocity)】：
+ *    实时计算鼠标移动速度 (px/ms)。
+ *    - 鼠标慢速经过时：周围粒子产生细腻的微小吸附倾斜；
+ *    - 鼠标移动稍快（速度 > 0.75 px/ms，即普通划过）：引力瞬间失效断开，粒子不受任何牵引；
+ *    - 移开或断开后阻尼归位。
  */
 
 export function mount(container) {
@@ -36,6 +43,12 @@ export function mount(container) {
   window.addEventListener("resize", resize);
   resize();
 
+  let target = { x: -9999, y: -9999 };
+  let lastPos = { x: -9999, y: -9999 };
+  let lastMoveTime = performance.now();
+  let mouseSpeed = 0; // 当前光标速度 (px/ms)
+
+  // 04 符文矩阵
   let elements = [];
   const presets = {};
 
@@ -100,8 +113,8 @@ export function mount(container) {
     }
   }
 
-  // 粒子网络
-  let points = [], target = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  // 01 粒子网络
+  let points = [];
 
   function initNetwork() {
     const w = netCanvas.width;
@@ -117,7 +130,8 @@ export function mount(container) {
         points.push({
           x: px, originX: px, y: py, originY: py,
           vx: (Math.random() - 0.5) * 0.7,
-          vy: (Math.random() - 0.5) * 0.7
+          vy: (Math.random() - 0.5) * 0.7,
+          attrX: 0, attrY: 0
         });
       }
     }
@@ -163,10 +177,34 @@ export function mount(container) {
   }
 
   function onMouseMove(e) {
+    const now = performance.now();
+    const dt = Math.max(now - lastMoveTime, 1);
+    const distMoved = Math.hypot(e.clientX - lastPos.x, e.clientY - lastPos.y);
+
+    if (lastPos.x !== -9999) {
+      // 计算瞬时速度并做平滑滤波
+      const instSpeed = distMoved / dt;
+      mouseSpeed = mouseSpeed * 0.4 + instSpeed * 0.6;
+    }
+
+    lastPos.x = e.clientX;
+    lastPos.y = e.clientY;
+    lastMoveTime = now;
+
     target.x = e.clientX;
     target.y = e.clientY;
   }
+
+  function onMouseLeave() {
+    target.x = -9999;
+    target.y = -9999;
+    lastPos.x = -9999;
+    lastPos.y = -9999;
+    mouseSpeed = 0;
+  }
+
   window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseleave", onMouseLeave);
 
   populateElements();
   initNetwork();
@@ -180,16 +218,59 @@ export function mount(container) {
     }
     const time = Date.now();
 
+    // 鼠标静止时速度随时间衰减
+    const idleTime = performance.now() - lastMoveTime;
+    if (idleTime > 60) {
+      mouseSpeed *= 0.85;
+    }
+
+    // 1. 符文层
     symbolCtx.clearRect(0, 0, symbolCanvas.width, symbolCanvas.height);
     for (let e in elements) elements[e].draw(symbolCtx, time);
+
+    // 2. 粒子自漂移 + 速度敏感断开的极微弱向心吸附
+    // 当移动速度稍快（>0.75 px/ms）直接断开引力
+    const SPEED_THRESHOLD = 0.75;
+    const isAttracting = mouseSpeed < SPEED_THRESHOLD && target.x !== -9999;
+    const ATTR_RADIUS = 150;
+    const MAX_PULL = 6.0; // 极其微弱的最大偏移：上限仅 6px
 
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
       p.x += p.vx; p.y += p.vy;
       if (Math.abs(p.x - p.originX) > 36) p.vx *= -1;
       if (Math.abs(p.y - p.originY) > 36) p.vy *= -1;
+
+      if (isAttracting) {
+        const dx = target.x - p.x;
+        const dy = target.y - p.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        if (d < ATTR_RADIUS && d > 1) {
+          // 慢速时轻微吸附，随速度增加线性减弱，稍快即完全断开
+          const speedFactor = Math.max(0, 1 - mouseSpeed / SPEED_THRESHOLD);
+          const ratio = (1 - d / ATTR_RADIUS) * speedFactor;
+          const pull = ratio * ratio * MAX_PULL;
+
+          const targetAttrX = (dx / d) * pull;
+          const targetAttrY = (dy / d) * pull;
+          p.attrX += (targetAttrX - p.attrX) * 0.08;
+          p.attrY += (targetAttrY - p.attrY) * 0.08;
+        } else {
+          p.attrX *= 0.88;
+          p.attrY *= 0.88;
+        }
+      } else {
+        // 稍快移动或离开窗口时瞬间断开，快速弹回
+        p.attrX *= 0.82;
+        p.attrY *= 0.82;
+      }
+
+      p.x += p.attrX;
+      p.y += p.attrY;
     }
 
+    // 3. 连线与渲染
     netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
     for(let i = 0; i < points.length; i++) {
       const p = points[i];
@@ -225,6 +306,7 @@ export function mount(container) {
     cancelAnimationFrame(animId);
     window.removeEventListener("resize", resize);
     window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("mouseleave", onMouseLeave);
     container.innerHTML = "";
   };
 }
