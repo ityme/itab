@@ -1,46 +1,36 @@
 /**
  * @file background/05-random-particles.js
- * @description 05 全向膨胀动态粒子系统 + 双色温呼吸弥散环境光 + 胶片微质感底板
+ * @description 05 全向膨胀动态粒子系统 + 静态深色底板 + 胶片微质感
  */
 
 export function mount(container) {
   let disposed = false;
 
-  // 5 组双色温呼吸弥散主题配置（左上冷调 × 右下暖调，搭配细腻胶片微颗粒）
+  // 5 组静态深色主题，保留粒子配色与胶片微颗粒。
   const themePresets = [
     {
       name: "翡翠暗金",
       baseColor: "#030907",
-      glowCool: "rgba(16, 95, 75, 0.36)",
-      glowWarm: "rgba(115, 68, 22, 0.22)",
       colors: ["#34d399", "#2dd4bf", "#6ee7b7", "#38bdf8", "#059669"]
     },
     {
       name: "深海星渊",
       baseColor: "#030811",
-      glowCool: "rgba(14, 90, 140, 0.38)",
-      glowWarm: "rgba(105, 45, 120, 0.25)",
       colors: ["#38bdf8", "#60a5fa", "#818cf8", "#0284c7", "#93c5fd"]
     },
     {
       name: "暗夜幽兰",
       baseColor: "#08040f",
-      glowCool: "rgba(90, 45, 130, 0.38)",
-      glowWarm: "rgba(130, 40, 85, 0.26)",
       colors: ["#c084fc", "#e879f9", "#f472b6", "#9333ea", "#a855f7"]
     },
     {
       name: "落霞暮光",
       baseColor: "#0b0504",
-      glowCool: "rgba(135, 55, 30, 0.35)",
-      glowWarm: "rgba(75, 25, 60, 0.28)",
       colors: ["#fb923c", "#f87171", "#fbbf24", "#ea580c", "#fca5a5"]
     },
     {
       name: "月影青黛",
       baseColor: "#040909",
-      glowCool: "rgba(20, 105, 95, 0.36)",
-      glowWarm: "rgba(25, 65, 95, 0.28)",
       colors: ["#5eead4", "#99f6e4", "#2dd4bf", "#67e8f9", "#0f766e"]
     }
   ];
@@ -56,26 +46,6 @@ export function mount(container) {
         height: 100%;
         overflow: hidden;
         background-color: ${currentTheme.baseColor};
-        pointer-events: none;
-      }
-      .ambient-glow-1 {
-        position: absolute;
-        width: 130%;
-        height: 130%;
-        top: -25%;
-        left: -20%;
-        background: radial-gradient(circle 540px at 20% 25%, ${currentTheme.glowCool} 0%, transparent 68%);
-        animation: amb-drift-cool 22s ease-in-out infinite alternate;
-        pointer-events: none;
-      }
-      .ambient-glow-2 {
-        position: absolute;
-        width: 130%;
-        height: 130%;
-        bottom: -25%;
-        right: -20%;
-        background: radial-gradient(circle 560px at 80% 75%, ${currentTheme.glowWarm} 0%, transparent 65%);
-        animation: amb-drift-warm 26s ease-in-out infinite alternate;
         pointer-events: none;
       }
       .ambient-grain {
@@ -97,20 +67,8 @@ export function mount(container) {
         background: transparent;
         pointer-events: none;
       }
-      @keyframes amb-drift-cool {
-        0% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(3%, 2%) scale(1.05); }
-        100% { transform: translate(-2%, 4%) scale(0.97); }
-      }
-      @keyframes amb-drift-warm {
-        0% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(-3%, -2%) scale(1.06); }
-        100% { transform: translate(2%, -3%) scale(0.96); }
-      }
     </style>
     <div class="ambient-wrap">
-      <div class="ambient-glow-1"></div>
-      <div class="ambient-glow-2"></div>
       <div class="ambient-grain"></div>
       <canvas class="particle-canvas"></canvas>
     </div>
