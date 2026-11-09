@@ -39,7 +39,6 @@ jobs:
       - name: build temporary workspace
         run: |
           mv src/ _temp_workspace/src/
-          mv integrate.py _temp_workspace/
 
       - name: build release assets
         run: |

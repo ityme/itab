@@ -1,12 +1,12 @@
 /**
  * @file background/05-random-particles.js
- * @description 05 全向膨胀动态粒子系统 + 静态深色底板 + 胶片微质感
+ * @description 05 全向膨胀动态粒子系统 + 径向深色层次底板 + 胶片微质感
  */
 
 export function mount(container) {
   let disposed = false;
 
-  // 5 组静态深色主题，保留粒子配色与胶片微颗粒。
+  // 5 组径向深色主题，保留粒子配色与胶片微颗粒。
   const themePresets = [
     {
       name: "翡翠暗金",

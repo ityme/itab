@@ -3,8 +3,8 @@
  * @description iWonder 背景管理调度器
  *
  * 现保留 2 套动态背景：
- * 1. 05-random-particles: 全向膨胀动态粒子 + 静态深色底板 + 胶片微质感
- * 2. 04-svg-aurora: 蓝绿光带（多层 SVG 缓慢横移，纯 CSS 动画）
+ * 1. 05-random-particles: 全向膨胀动态粒子 + 径向深色层次底板 + 胶片微质感
+ * 2. 04-svg-aurora: 彩带光带（多层 SVG 缓慢横移，每次打开随机配色）
  *
  * 调度规则：
  * - 未设置图片目录时：在 2 套动态背景中等概率二选一。
@@ -17,7 +17,7 @@ import { getDirectoryHandle, verifyPermission } from "./storage.js";
 
 export const DYNAMIC_BACKGROUND_MODULES = [
   { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles },
-  { id: "svg-aurora", name: "04 蓝绿光带", mount: mountSvgAurora }
+  { id: "svg-aurora", name: "04 彩带光带", mount: mountSvgAurora }
 ];
 
 let activeUnmount = null;

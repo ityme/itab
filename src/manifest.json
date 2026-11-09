@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "iWonder Tab",
   "version": "2.0.0",
-  "description": "极简美观的浏览器新标签页，支持动态 Canvas 粒子背景与自定义本地壁纸。",
+  "description": "极简美观的浏览器新标签页，支持动态粒子 / 彩带背景与自定义本地壁纸。",
   "chrome_url_overrides": {
     "newtab": "tab.html"
   },
