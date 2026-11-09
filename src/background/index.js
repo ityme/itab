@@ -1,20 +1,23 @@
 /**
  * @file background/index.js
  * @description iWonder 背景管理调度器
- * 
- * 现固化采用：
- * 05-random-particles: 05 全向膨胀动态粒子系统 + 静态深色底板 + 胶片微质感
- * 
+ *
+ * 现保留 2 套动态背景：
+ * 1. 05-random-particles: 全向膨胀动态粒子 + 静态深色底板 + 胶片微质感
+ * 2. 04-svg-aurora: 蓝绿光带（多层 SVG 缓慢横移，纯 CSS 动画）
+ *
  * 调度规则：
- * - 未设置图片目录时：直接渲染高质感 05 全向膨胀动态粒子背景。
- * - 设置图片目录时：目录图片数 m，动态背景 1 套 (n=1)，全池 (m + 1) 等概率取一。
+ * - 未设置图片目录时：在 2 套动态背景中等概率二选一。
+ * - 设置图片目录时：目录图片数 m，动态背景 2 套 (n=2)，全池 (m + 2) 等概率取一。
  */
 
 import { mount as mountRandomParticles } from "./05-random-particles.js";
+import { mount as mountSvgAurora } from "./04-svg-aurora.js";
 import { getDirectoryHandle, verifyPermission } from "./storage.js";
 
 export const DYNAMIC_BACKGROUND_MODULES = [
-  { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles }
+  { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles },
+  { id: "svg-aurora", name: "04 蓝绿光带", mount: mountSvgAurora }
 ];
 
 let activeUnmount = null;
@@ -54,7 +57,7 @@ export function clearDynamicBackground() {
   if (host) host.innerHTML = "";
 }
 
-export function renderDynamicBackground(index = 0) {
+export function renderDynamicBackground(index) {
   clearDynamicBackground();
   document.body.style.removeProperty("background-image");
   document.body.style.backgroundColor = "transparent";
@@ -62,33 +65,31 @@ export function renderDynamicBackground(index = 0) {
 
   const safeIndex = (index >= 0 && index < DYNAMIC_BACKGROUND_MODULES.length)
     ? index
-    : 0;
+    : Math.floor(Math.random() * DYNAMIC_BACKGROUND_MODULES.length);
 
   const target = DYNAMIC_BACKGROUND_MODULES[safeIndex];
-  console.log(`[iWonder] Activated dynamic background: ${target.name}`);
+  console.log(`[iWonder] Activated dynamic background (${safeIndex + 1}/${DYNAMIC_BACKGROUND_MODULES.length}): ${target.name}`);
   activeUnmount = target.mount(host);
   return target;
 }
 
 /**
- * (m + n) 取 1 随机算法，当前 n = 1
+ * (m + n) 取 1 随机算法，当前 n = 2
  */
 export async function selectRandomBackground(imagePath = "", imageNameList = []) {
   const m = Array.isArray(imageNameList) ? imageNameList.length : 0;
-  const n = DYNAMIC_BACKGROUND_MODULES.length; // 1
+  const n = DYNAMIC_BACKGROUND_MODULES.length;
 
   if (!imagePath || m === 0) {
-    // 纯动态背景
-    renderDynamicBackground(0);
-    return { type: "dynamic", index: 0, meta: DYNAMIC_BACKGROUND_MODULES[0] };
+    const dynIndex = Math.floor(Math.random() * n);
+    renderDynamicBackground(dynIndex);
+    return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex] };
   }
 
-  // (m + 1) 取一
   const total = m + n;
   const pick = Math.floor(Math.random() * total);
 
   if (pick < m) {
-    // 选中小图库图片
     const chosenImage = imageNameList[pick];
     console.log(`[iWonder] Selected local image (${pick + 1}/${m}): ${chosenImage}`);
 
@@ -116,9 +117,9 @@ export async function selectRandomBackground(imagePath = "", imageNameList = [])
     }
 
     return { type: "image", index: pick, name: chosenImage };
-  } else {
-    // 选中动态背景套件
-    renderDynamicBackground(0);
-    return { type: "dynamic", index: 0, meta: DYNAMIC_BACKGROUND_MODULES[0] };
   }
+
+  const dynIndex = pick - m;
+  renderDynamicBackground(dynIndex);
+  return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex] };
 }

@@ -131,9 +131,9 @@ import { selectRandomBackground } from "./background/index.js";
 
 /**
  * Sets a random background image from the user-selected folder,
- * or selects one of the 5 built-in dynamic background modules.
- * If folder has m images, pool size is m + 5, equal probability.
- * If no folder, randomly picks 1 of the 5 dynamic backgrounds.
+ * or selects one of the built-in dynamic background modules.
+ * If folder has m images, pool size is m + n, equal probability.
+ * If no folder, randomly picks 1 of the n dynamic backgrounds.
  */
 function randomBackgroundImageSet() {
   const imagePath = dbGet("imagePath") || "";
