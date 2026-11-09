@@ -10,7 +10,7 @@
     "default_title": "打开 iWonder Tab"
   },
   "icons": {
-    "128": "icons/favico.svg"
+    "128": "assets/favico.svg"
   },
   "browser_specific_settings": {
     "gecko": {

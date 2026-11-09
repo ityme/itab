@@ -111,11 +111,14 @@ body {
 }
 
 .engine-item > svg,
-.button-item > svg {
+.engine-item > img,
+.button-item > svg,
+.button-item > img {
   height: calc(var(--height-2) / 2);
 }
 
-.engine-item[name="google-ai-mode"] > svg {
+.engine-item[name="google-ai-mode"] > svg,
+.engine-item[name="google-ai-mode"] > img {
   height: calc(var(--height-2) / 2.4);
 }
 /* #endregion */
@@ -199,7 +202,8 @@ body {
   background-color: white;
 }
 
-.engine-item > svg {
+.engine-item > svg,
+.engine-item > img {
   aspect-ratio: 1;
   border-radius: 50%;
 }
@@ -247,7 +251,8 @@ body {
   justify-content: center;
 }
 
-.button-item > svg {
+.button-item > svg,
+.button-item > img {
   aspect-ratio: 1;
   border-radius: 50%;
 }
