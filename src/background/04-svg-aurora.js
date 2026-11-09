@@ -76,20 +76,19 @@ export function mount(container) {
         display: block;
       }
       .aurora-wrap .g {
-        transform-box: fill-box;
         transform-origin: 50% 50%;
         animation-name: aurora-breathe;
         animation-iteration-count: infinite;
         animation-direction: alternate;
       }
-      .aurora-wrap .path {
+      .aurora-wrap .aurora-drift {
         animation-name: aurora-drift;
         animation-timing-function: linear;
         animation-iteration-count: infinite;
       }
       @keyframes aurora-drift {
         from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
+        to { transform: translateX(-1920px); }
       }
       @keyframes aurora-breathe {
         from { transform: translateY(var(--aurora-y-from)) rotate(var(--aurora-r-from)) scale(var(--aurora-sx-from), var(--aurora-sy-from)); opacity: var(--aurora-o-from); }
@@ -126,10 +125,13 @@ export function mount(container) {
     group.style.animationTimingFunction = ease;
     group.style.animationDelay = `${-randomRange(0, duration * 0.25)}s`;
 
-    group.querySelectorAll(".path").forEach((path) => {
-      path.style.animationDuration = `${duration}s`;
-      path.style.animationDelay = `${-randomRange(0, duration)}s`;
-    });
+    const paths = [...group.querySelectorAll(".path")];
+    const drift = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    drift.classList.add("aurora-drift");
+    drift.style.animationDuration = `${duration}s`;
+    drift.style.animationDelay = `${-randomRange(0, duration)}s`;
+    paths.forEach((path) => drift.appendChild(path));
+    group.appendChild(drift);
   });
 
   return function unmount() {
