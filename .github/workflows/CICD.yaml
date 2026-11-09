@@ -31,31 +31,21 @@ jobs:
           echo "TAG_NAME=$TAG_NAME"
           echo "RELEASE_NAME=$RELEASE_NAME"
 
-      - name: create temporary workspace
-        run: |
-          mkdir _temp_workspace
-          mkdir _temp_release_assets
-
-      - name: build temporary workspace
-        run: |
-          mv src/ _temp_workspace/src/
-
-      - name: build release assets
-        run: |
-          mkdir -p _temp_release_assets/
-          # 打包 Edge / Chrome 扩展 zip
-          cd _temp_workspace/src
-          zip -r ../../_temp_release_assets/iwonder-tab-edge-extension.zip ./*
-          cd ../..
+      - name: package extensions
+        run: python3 scripts/package-extensions.py
 
       - name: check files
         run: |
-          ls -alh
-          tree .
+          ls -alh dist
+          unzip -l dist/itab-extension-chrome.zip | head
+          unzip -l dist/itab-extension-firefox.zip | head
 
       - name: upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: _temp_release_assets/*
+          files: |
+            dist/itab-extension-chrome.zip
+            dist/itab-extension-edge.zip
+            dist/itab-extension-firefox.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

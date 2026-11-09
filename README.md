@@ -4,7 +4,7 @@
 
 ## ✨ 功能特性
 
-- **🧩 Edge 新标签页扩展**: 支持作为 Edge 浏览器扩展直接载入，接管新标签页。
+- **🧩 浏览器新标签页扩展**: 支持 Chrome / Edge / Firefox，接管新标签页。
 - **🖼️ 混合双模背景 (m + n 随机)**:
   - **默认状态（未指定图片目录）**：每次刷新在 2 套动态背景中**等概率二选一**。
   - **自定义状态（指定图片目录）**：本地图片池（数量 $m$）与 2 套动态背景（数量 $n=2$）合并，每次刷新在 $(m + 2)$ 中**等概率选一**。
@@ -16,11 +16,39 @@
 
 ## 🚀 安装说明
 
-### 作为 Edge / Chrome 浏览器扩展载入
-1. 在 Edge 浏览器地址栏输入 `edge://extensions/` 并回车。
-2. 开启左侧的 **「开发人员模式」** 开关。
-3. 点击 **「加载解压缩的扩展」**，选择本项目的 `src/` 文件夹。
-4. 打开新标签页，即可享受极速动态背景。
+扩展根目录是 `src/extension/`（含 `manifest.json`），不要选择外层 `src/`。
+
+开发时也可在仓库根目录运行 `python3 scripts/package-extensions.py`，生成：
+
+- `dist/itab-extension-chrome.zip`
+- `dist/itab-extension-edge.zip`
+- `dist/itab-extension-firefox.zip`
+
+### Chrome
+1. 打开 `chrome://extensions/`。
+2. 打开右上角 **「开发者模式」**。
+3. 点击 **「加载已解压的扩展程序」**，选择本仓库的 `src/extension/`。
+4. 或下载 Release 里的 `itab-extension-chrome.zip`，解压后再按同样方式加载该文件夹。
+5. 打开新标签页即可。
+
+上架：Chrome 网上应用店需要开发者账号，上传 `itab-extension-chrome.zip`。
+
+### Edge
+1. 打开 `edge://extensions/`。
+2. 打开左侧 **「开发人员模式」**。
+3. 点击 **「加载解压缩的扩展」**，选择本仓库的 `src/extension/`。
+4. 或下载 Release 里的 `itab-extension-edge.zip`，解压后再加载该文件夹。
+5. 打开新标签页即可。
+
+上架：Microsoft Edge 加载项需要合作中心账号，上传 `itab-extension-edge.zip`。
+
+### Firefox
+1. 打开 `about:debugging#/runtime/this-firefox`。
+2. 点击 **「临时载入附加组件」**，选择 `src/extension/manifest.firefox.json`。
+3. 或下载 Release 里的 `itab-extension-firefox.zip`：打开 `about:addons` → 齿轮 → **「从文件安装附加组件」**。
+4. 打开新标签页即可。
+
+说明：临时载入在重启 Firefox 后会卸下。长期使用需要 [addons.mozilla.org](https://addons.mozilla.org/) 签名；上传的是 `itab-extension-firefox.zip`（包内 `manifest.json` 已含 gecko id）。
 
 ### 搜索栏可见性
 
@@ -50,11 +78,11 @@
 6. 之后会弹窗如`设置图5`, 点击`查看文件`.
 7. 此时背景图片设置完成.
 
-## 🛠️ 安装说明
-1. [点击下载 `itab.html`](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest)。
-2. 将下载的 `itab.html` 文件设置为浏览器主页。
+## 🛠️ 源码预览与发版
 
-源码预览可直接打开 `src/tab.html`。发布版将 `src/` 打成 Edge / Chrome 扩展 zip（见 `.github/workflows/CICD.yaml`）。
+源码预览可直接打开 `src/extension/tab.html`。
+
+打 `v*` 标签后，GitHub Actions 会打包三个 zip 并上传到 Release：`itab-extension-chrome.zip`、`itab-extension-edge.zip`、`itab-extension-firefox.zip`。
 ---
 
 ## 👁️ 预览
