@@ -11,15 +11,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src" / "extension"
 OUT = ROOT / "dist"
-SKIP_NAMES = {"manifest.firefox.json"}
+BROWSERS = ("chrome", "edge", "firefox")
+MANIFEST_NAMES = {f"manifest.{browser}.json" for browser in BROWSERS}
 
 
-def copy_src(dest: Path) -> None:
+def copy_shared(dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     for path in SRC.rglob("*"):
         if not path.is_file():
             continue
-        if path.name in SKIP_NAMES:
+        if path.name.startswith("manifest") and path.suffix == ".json":
             continue
         rel = path.relative_to(SRC)
         target = dest / rel
@@ -34,11 +35,23 @@ def zip_dir(src: Path, zip_path: Path) -> None:
                 zf.write(path, path.relative_to(src).as_posix())
 
 
+def load_manifest(browser: str) -> dict:
+    path = SRC / f"manifest.{browser}.json"
+    if not path.is_file():
+        raise SystemExit(f"missing {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def main() -> None:
-    if not (SRC / "manifest.json").is_file():
-        raise SystemExit(f"missing extension manifest: {SRC / 'manifest.json'}")
-    if not (SRC / "manifest.firefox.json").is_file():
-        raise SystemExit(f"missing firefox manifest: {SRC / 'manifest.firefox.json'}")
+    chrome_manifest = load_manifest("chrome")
+    edge_manifest = load_manifest("edge")
+    firefox_manifest = load_manifest("firefox")
+    if "browser_specific_settings" in chrome_manifest:
+        raise SystemExit("Chrome manifest must not include gecko settings")
+    if "browser_specific_settings" in edge_manifest:
+        raise SystemExit("Edge manifest must not include gecko settings")
+    if "gecko" not in firefox_manifest.get("browser_specific_settings", {}):
+        raise SystemExit("Firefox manifest must include gecko id")
 
     OUT.mkdir(parents=True, exist_ok=True)
     for old in OUT.glob("itab-extension-*.zip"):
@@ -46,31 +59,15 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
-        chrome_dir = tmp_path / "chrome"
-        copy_src(chrome_dir)
-        chrome_zip = OUT / "itab-extension-chrome.zip"
-        zip_dir(chrome_dir, chrome_zip)
-        shutil.copy2(chrome_zip, OUT / "itab-extension-edge.zip")
-
-        firefox_dir = tmp_path / "firefox"
-        copy_src(firefox_dir)
-        shutil.copy2(SRC / "manifest.firefox.json", firefox_dir / "manifest.json")
-        zip_dir(firefox_dir, OUT / "itab-extension-firefox.zip")
-
-    chrome_manifest = json.loads((SRC / "manifest.json").read_text(encoding="utf-8"))
-    firefox_manifest = json.loads((SRC / "manifest.firefox.json").read_text(encoding="utf-8"))
-    if "browser_specific_settings" in chrome_manifest:
-        raise SystemExit("Chrome/Edge manifest must not include gecko settings")
-    if "gecko" not in firefox_manifest.get("browser_specific_settings", {}):
-        raise SystemExit("Firefox manifest must include gecko id")
+        for browser in BROWSERS:
+            dest = tmp_path / browser
+            copy_shared(dest)
+            shutil.copy2(SRC / f"manifest.{browser}.json", dest / "manifest.json")
+            zip_dir(dest, OUT / f"itab-extension-{browser}.zip")
 
     print("Packed:")
-    for name in (
-        "itab-extension-chrome.zip",
-        "itab-extension-edge.zip",
-        "itab-extension-firefox.zip",
-    ):
-        path = OUT / name
+    for browser in BROWSERS:
+        path = OUT / f"itab-extension-{browser}.zip"
         print(f"  {path} ({path.stat().st_size} bytes)")
 
 

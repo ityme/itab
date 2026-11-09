@@ -16,7 +16,13 @@
 
 ## 🚀 安装说明
 
-扩展根目录是 `src/extension/`（含 `manifest.json`），不要选择外层 `src/`。
+扩展根目录是 `src/extension/`，不要选择外层 `src/`。三种浏览器各有一份清单，打包时原样放进 zip 并命名为 `manifest.json`：
+
+- `src/extension/manifest.chrome.json`
+- `src/extension/manifest.edge.json`
+- `src/extension/manifest.firefox.json`
+
+本地加载 Chrome / Edge 时，目录里还需要一份名为 `manifest.json` 的文件（内容与 `manifest.chrome.json` 相同）。
 
 开发时也可在仓库根目录运行 `python3 scripts/package-extensions.py`，生成：
 
@@ -44,7 +50,7 @@
 
 ### Firefox
 1. 打开 `about:debugging#/runtime/this-firefox`。
-2. 点击 **「临时载入附加组件」**，选择 `src/extension/manifest.firefox.json`。
+2. 点击 **「临时载入附加组件」**，选择 `src/extension/manifest.firefox.json`（Firefox 允许指定清单文件）。
 3. 或下载 Release 里的 `itab-extension-firefox.zip`：打开 `about:addons` → 齿轮 → **「从文件安装附加组件」**。
 4. 打开新标签页即可。
 
