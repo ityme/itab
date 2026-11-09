@@ -10,6 +10,6 @@
     "default_title": "打开 iWonder Tab"
   },
   "icons": {
-    "128": "icons/icon.svg"
+    "128": "icons/favico.svg"
   }
 }
