@@ -87,8 +87,6 @@ function dbSet(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-import { saveDirectoryHandle, clearDirectoryHandle } from "./background/storage.js";
-
 /**
  * Opens a directory picker and returns a list of image file names.
  * @returns {Promise<string[]|undefined>} A promise that resolves to a list of image names, or undefined if the user cancels.
@@ -126,8 +124,6 @@ async function getImageNameList() {
     }
   }
 }
-
-import { selectRandomBackground } from "./background/index.js";
 
 /**
  * Sets a random background image from the user-selected folder,

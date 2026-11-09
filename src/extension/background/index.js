@@ -11,11 +11,7 @@
  * - 设置图片目录时：目录图片数 m，动态背景 2 套 (n=2)，全池 (m + 2) 等概率取一。
  */
 
-import { mount as mountRandomParticles } from "./05-random-particles.js";
-import { mount as mountSvgAurora } from "./04-svg-aurora.js";
-import { getDirectoryHandle, verifyPermission } from "./storage.js";
-
-export const DYNAMIC_BACKGROUND_MODULES = [
+const DYNAMIC_BACKGROUND_MODULES = [
   { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles },
   { id: "svg-aurora", name: "04 彩带光带", mount: mountSvgAurora }
 ];
@@ -43,7 +39,7 @@ function ensureBackgroundHost() {
   return host;
 }
 
-export function clearDynamicBackground() {
+function clearDynamicBackground() {
   cleanupBlobUrl();
   if (typeof activeUnmount === "function") {
     try {
@@ -57,7 +53,7 @@ export function clearDynamicBackground() {
   if (host) host.innerHTML = "";
 }
 
-export function renderDynamicBackground(index) {
+function renderDynamicBackground(index) {
   clearDynamicBackground();
   document.body.style.removeProperty("background-image");
   document.body.style.backgroundColor = "transparent";
@@ -76,7 +72,7 @@ export function renderDynamicBackground(index) {
 /**
  * (m + n) 取 1 随机算法，当前 n = 2
  */
-export async function selectRandomBackground(imagePath = "", imageNameList = []) {
+async function selectRandomBackground(imagePath = "", imageNameList = []) {
   const m = Array.isArray(imageNameList) ? imageNameList.length : 0;
   const n = DYNAMIC_BACKGROUND_MODULES.length;
 

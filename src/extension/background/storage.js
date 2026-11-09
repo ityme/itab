@@ -21,7 +21,7 @@ function openDB() {
   });
 }
 
-export async function saveDirectoryHandle(handle) {
+async function saveDirectoryHandle(handle) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
@@ -32,7 +32,7 @@ export async function saveDirectoryHandle(handle) {
   });
 }
 
-export async function getDirectoryHandle() {
+async function getDirectoryHandle() {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -48,7 +48,7 @@ export async function getDirectoryHandle() {
   }
 }
 
-export async function clearDirectoryHandle() {
+async function clearDirectoryHandle() {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -66,7 +66,7 @@ export async function clearDirectoryHandle() {
 /**
  * 校验并请求文件夹读取权限
  */
-export async function verifyPermission(fileHandle, readWrite = false) {
+async function verifyPermission(fileHandle, readWrite = false) {
   const options = {};
   if (readWrite) {
     options.mode = "readwrite";

@@ -89,7 +89,7 @@ const THEMES = [
   }
 ];
 
-export function mount(container) {
+function mountSvgAurora(container) {
   const theme = pick(THEMES);
   const wrap = document.createElement("div");
   wrap.className = "aurora-wrap";

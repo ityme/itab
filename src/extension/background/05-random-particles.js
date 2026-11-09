@@ -3,7 +3,7 @@
  * @description 05 全向膨胀动态粒子系统 + 径向深色层次底板 + 胶片微质感
  */
 
-export function mount(container) {
+function mountRandomParticles(container) {
   let disposed = false;
 
   // 5 组径向深色主题，保留粒子配色与胶片微颗粒。
