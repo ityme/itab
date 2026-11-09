@@ -56,7 +56,41 @@ function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+const THEMES = [
+  {
+    name: "蓝绿光带",
+    bg: "radial-gradient(circle at 50% 38%, #1a5cff 0%, #0a3cca 42%, #042e52 100%)",
+    from: "#1742ff",
+    to: "#22dd8a"
+  },
+  {
+    name: "暮金青空",
+    bg: "radial-gradient(circle at 50% 38%, #3a6aa8 0%, #1d3f72 42%, #10182a 100%)",
+    from: "#f4c27a",
+    to: "#7dd3c7"
+  },
+  {
+    name: "紫雾极光",
+    bg: "radial-gradient(circle at 50% 38%, #5a3d9e 0%, #2b1a58 42%, #12081f 100%)",
+    from: "#c084fc",
+    to: "#67e8f9"
+  },
+  {
+    name: "珊瑚深海",
+    bg: "radial-gradient(circle at 50% 38%, #1b4d6e 0%, #0d2d44 42%, #07141f 100%)",
+    from: "#fb7185",
+    to: "#38bdf8"
+  },
+  {
+    name: "翡翠夜潮",
+    bg: "radial-gradient(circle at 50% 38%, #0f766e 0%, #115e59 42%, #042f2e 100%)",
+    from: "#34d399",
+    to: "#38bdf8"
+  }
+];
+
 export function mount(container) {
+  const theme = pick(THEMES);
   const wrap = document.createElement("div");
   wrap.className = "aurora-wrap";
   wrap.innerHTML = `
@@ -65,7 +99,7 @@ export function mount(container) {
         position: absolute;
         inset: 0;
         overflow: hidden;
-        background: radial-gradient(circle at 50% 40%, #0a3cca 0%, #042e52 100%);
+        background: ${theme.bg};
         pointer-events: none;
       }
       .aurora-wrap svg {
@@ -98,6 +132,10 @@ export function mount(container) {
     ${AURORA_SVG}
   `;
   container.appendChild(wrap);
+
+  const stops = wrap.querySelectorAll("linearGradient stop");
+  if (stops[0]) stops[0].setAttribute("stop-color", theme.from);
+  if (stops[1]) stops[1].setAttribute("stop-color", theme.to);
 
   const groups = wrap.querySelectorAll(".g");
   groups.forEach((group) => {

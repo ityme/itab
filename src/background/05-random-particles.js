@@ -10,27 +10,27 @@ export function mount(container) {
   const themePresets = [
     {
       name: "翡翠暗金",
-      baseColor: "#030907",
+      bg: "radial-gradient(circle at 50% 38%, #0d3a32 0%, #07241f 46%, #030907 100%)",
       colors: ["#34d399", "#2dd4bf", "#6ee7b7", "#38bdf8", "#059669"]
     },
     {
       name: "深海星渊",
-      baseColor: "#030811",
+      bg: "radial-gradient(circle at 50% 38%, #123b5c 0%, #0a243a 46%, #030811 100%)",
       colors: ["#38bdf8", "#60a5fa", "#818cf8", "#0284c7", "#93c5fd"]
     },
     {
       name: "暗夜幽兰",
-      baseColor: "#08040f",
+      bg: "radial-gradient(circle at 50% 38%, #3a1d55 0%, #1d0e30 46%, #08040f 100%)",
       colors: ["#c084fc", "#e879f9", "#f472b6", "#9333ea", "#a855f7"]
     },
     {
       name: "落霞暮光",
-      baseColor: "#0b0504",
+      bg: "radial-gradient(circle at 50% 38%, #4a2418 0%, #24120c 46%, #0b0504 100%)",
       colors: ["#fb923c", "#f87171", "#fbbf24", "#ea580c", "#fca5a5"]
     },
     {
       name: "月影青黛",
-      baseColor: "#040909",
+      bg: "radial-gradient(circle at 50% 38%, #164744 0%, #0b2a28 46%, #040909 100%)",
       colors: ["#5eead4", "#99f6e4", "#2dd4bf", "#67e8f9", "#0f766e"]
     }
   ];
@@ -45,7 +45,7 @@ export function mount(container) {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background-color: ${currentTheme.baseColor};
+        background: ${currentTheme.bg};
         pointer-events: none;
       }
       .ambient-grain {
