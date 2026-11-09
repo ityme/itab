@@ -7,12 +7,17 @@
     "newtab": "tab.html"
   },
   "action": {
-    "default_title": "打开 iWonder Tab"
+    "default_title": "打开 iWonder Tab",
+    "default_icon": {
+      "16": "assets/logo-128.png",
+      "48": "assets/logo-128.png",
+      "128": "assets/logo-128.png"
+    }
   },
   "icons": {
-    "16": "assets/logo.svg",
-    "48": "assets/logo.svg",
-    "128": "assets/logo.svg"
+    "16": "assets/logo-128.png",
+    "48": "assets/logo-128.png",
+    "128": "assets/logo-128.png"
   },
   "browser_specific_settings": {
     "gecko": {
