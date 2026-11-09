@@ -1,45 +1,122 @@
 /**
  * @file background/05-random-particles.js
- * @description 06 动态粒子系统 · 鼠标距离放大 · 每次随机色系
- * 模块化直挂 tab.html，无需 iframe。
+ * @description 05 全向膨胀动态粒子系统 + 双色温呼吸弥散环境光 + 胶片微质感底板
  */
 
 export function mount(container) {
   let disposed = false;
+
+  // 5 组双色温呼吸弥散主题配置（左上冷调 × 右下暖调，搭配细腻胶片微颗粒）
   const themePresets = [
     {
-      name: "翡翠极光",
-      bg: "radial-gradient(ellipse at bottom, #0a2521 0%, #061714 55%, #020908 100%)",
+      name: "翡翠暗金",
+      baseColor: "#030907",
+      glowCool: "rgba(16, 95, 75, 0.36)",
+      glowWarm: "rgba(115, 68, 22, 0.22)",
       colors: ["#34d399", "#2dd4bf", "#6ee7b7", "#38bdf8", "#059669"]
     },
     {
-      name: "深海星芒",
-      bg: "radial-gradient(ellipse at bottom, #0c2336 0%, #081622 55%, #03080e 100%)",
+      name: "深海星渊",
+      baseColor: "#030811",
+      glowCool: "rgba(14, 90, 140, 0.38)",
+      glowWarm: "rgba(105, 45, 120, 0.25)",
       colors: ["#38bdf8", "#60a5fa", "#818cf8", "#0284c7", "#93c5fd"]
     },
     {
       name: "暗夜幽兰",
-      bg: "radial-gradient(ellipse at bottom, #21132f 0%, #130a1c 55%, #07030a 100%)",
+      baseColor: "#08040f",
+      glowCool: "rgba(90, 45, 130, 0.38)",
+      glowWarm: "rgba(130, 40, 85, 0.26)",
       colors: ["#c084fc", "#e879f9", "#f472b6", "#9333ea", "#a855f7"]
     },
     {
-      name: "落日余晖",
-      bg: "radial-gradient(ellipse at bottom, #2d1814 0%, #1a0d0a 55%, #0b0504 100%)",
+      name: "落霞暮光",
+      baseColor: "#0b0504",
+      glowCool: "rgba(135, 55, 30, 0.35)",
+      glowWarm: "rgba(75, 25, 60, 0.28)",
       colors: ["#fb923c", "#f87171", "#fbbf24", "#ea580c", "#fca5a5"]
     },
     {
       name: "月影青黛",
-      bg: "radial-gradient(ellipse at bottom, #162624 0%, #0d1716 55%, #050908 100%)",
+      baseColor: "#040909",
+      glowCool: "rgba(20, 105, 95, 0.36)",
+      glowWarm: "rgba(25, 65, 95, 0.28)",
       colors: ["#5eead4", "#99f6e4", "#2dd4bf", "#67e8f9", "#0f766e"]
     }
   ];
 
   const currentTheme = themePresets[Math.floor(Math.random() * themePresets.length)];
 
-  const canvas = document.createElement("canvas");
-  canvas.style.cssText = `position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:${currentTheme.bg};pointer-events:none;`;
-  container.appendChild(canvas);
+  container.innerHTML = `
+    <style>
+      .ambient-wrap {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: ${currentTheme.baseColor};
+        pointer-events: none;
+      }
+      .ambient-glow-1 {
+        position: absolute;
+        width: 130%;
+        height: 130%;
+        top: -25%;
+        left: -20%;
+        background: radial-gradient(circle 540px at 20% 25%, ${currentTheme.glowCool} 0%, transparent 68%);
+        animation: amb-drift-cool 22s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+      .ambient-glow-2 {
+        position: absolute;
+        width: 130%;
+        height: 130%;
+        bottom: -25%;
+        right: -20%;
+        background: radial-gradient(circle 560px at 80% 75%, ${currentTheme.glowWarm} 0%, transparent 65%);
+        animation: amb-drift-warm 26s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+      .ambient-grain {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.045;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      }
+      .particle-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: transparent;
+        pointer-events: none;
+      }
+      @keyframes amb-drift-cool {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(3%, 2%) scale(1.05); }
+        100% { transform: translate(-2%, 4%) scale(0.97); }
+      }
+      @keyframes amb-drift-warm {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-3%, -2%) scale(1.06); }
+        100% { transform: translate(2%, -3%) scale(0.96); }
+      }
+    </style>
+    <div class="ambient-wrap">
+      <div class="ambient-glow-1"></div>
+      <div class="ambient-glow-2"></div>
+      <div class="ambient-grain"></div>
+      <canvas class="particle-canvas"></canvas>
+    </div>
+  `;
 
+  const canvas = container.querySelector(".particle-canvas");
   const ctx = canvas.getContext("2d");
   let w, h;
   const arc = 110;
