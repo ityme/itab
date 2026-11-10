@@ -67,15 +67,16 @@ function classHandler(classselector, operation) {
  * @returns {any} The retrieved value or the default value.
  */
 function dbGet(key) {
-  let value = null;
   try {
-    // Attempt to get and parse the item from localStorage
-    value = JSON.parse(localStorage.getItem(key));
+    const raw = localStorage.getItem(key);
+    if (raw === null) return DEFAULT_CONFIG[key];
+    const value = JSON.parse(raw);
+    if (value === null || value === undefined) return DEFAULT_CONFIG[key];
+    return value;
   } catch (error) {
     console.error("Error getting item from localStorage:", error);
+    return DEFAULT_CONFIG[key];
   }
-  // Return the value or the default value if value is null/undefined
-  return value || DEFAULT_CONFIG[key];
 }
 
 /**
@@ -93,31 +94,8 @@ function dbSet(key, value) {
  */
 async function getImageNameList() {
   try {
-    // Show the directory picker to the user
-    const dirHandle = await window.showDirectoryPicker();
-    // 将句柄保存在 IndexedDB 中，使扩展环境下次能直接静默访问该目录下的图片
-    await saveDirectoryHandle(dirHandle);
-
-    const imageNameList = [];
-
-    // Iterate over the files in the selected directory
-    for await (const entry of dirHandle.values()) {
-      // Check if the entry is a file and has a valid image extension
-      if (
-        entry.kind === "file" &&
-        (entry.name.endsWith(".jpg") ||
-          entry.name.endsWith(".jpeg") ||
-          entry.name.endsWith(".png") ||
-          entry.name.endsWith(".gif") ||
-          entry.name.endsWith(".webp"))
-      ) {
-        imageNameList.push(entry.name);
-      }
-    }
-
-    return imageNameList;
+    return await importWallpaperFolder();
   } catch (err) {
-    // Handle cases where the user aborts the selection
     if (err.name !== "AbortError") {
       console.error("select folder error:", err);
       alert("Cannot access folder, please check browser permission settings.");
@@ -337,8 +315,8 @@ classHandler(`.cancel-button`).addEventListener("click", (event) => {
 classHandler(`.reset-button`).addEventListener("click", async (event) => {
   // Reset to default settings
   dbSet("imagePath", "");
-  dbSet("imageNameList", "");
-  await clearDirectoryHandle();
+  dbSet("imageNameList", []);
+  await clearWallpaperLibrary();
   // Set a new random background image
   randomBackgroundImageSet();
   settingsModeExit();
@@ -350,7 +328,7 @@ classHandler(`.confirm-button`).addEventListener("click", (event) => {
   imagePath = imagePath.trim();
   if (imagePath === "") {
     alert(
-      "Enter image folder path (e.g. F:/path/images), then confirm in the pop-up window."
+      "Enter image folder path (e.g. F:/path/images), then confirm in the folder dialog. When Edge asks to view files, click Allow."
     );
     return;
   }
@@ -369,10 +347,8 @@ classHandler(`.confirm-button`).addEventListener("click", (event) => {
       imageNameList = [];
       return;
     }
-    // Save the path and image list to localStorage
     dbSet("imagePath", imagePath);
     dbSet("imageNameList", imageNameList || []);
-    // Set a new random background image
     randomBackgroundImageSet();
   });
   settingsModeExit();

@@ -1,6 +1,6 @@
 /**
- * @file background/04-svg-aurora.js
- * @description 04 彩带光带：多层 SVG 缓慢横移，每次打开随机配色，纯 CSS 动画，无外部依赖。
+ * @file background/aurora.js
+ * @description 彩带光带：多层流体 SVG 缓慢横移，每次打开随机配色，纯 CSS 动画，无外部依赖。
  */
 
 const AURORA_SVG = `

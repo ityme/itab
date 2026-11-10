@@ -1,6 +1,6 @@
 /**
- * @file background/05-random-particles.js
- * @description 05 全向膨胀动态粒子系统 + 径向深色层次底板 + 胶片微质感
+ * @file background/particles.js
+ * @description 全向膨胀动态粒子系统 + 径向深色层次底板 + 胶片微质感
  */
 
 function mountRandomParticles(container) {

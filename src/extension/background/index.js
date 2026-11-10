@@ -3,8 +3,8 @@
  * @description iWonder 背景管理调度器
  *
  * 现保留 2 套动态背景：
- * 1. 05-random-particles: 全向膨胀动态粒子 + 径向深色层次底板 + 胶片微质感
- * 2. 04-svg-aurora: 彩带光带（多层 SVG 缓慢横移，每次打开随机配色）
+ * 1. particles: 动态粒子（全向膨胀动态粒子 + 径向深色层次底板 + 胶片微质感）
+ * 2. aurora: 极光彩带（多层流体 SVG 缓慢飘移，每次打开随机配色）
  *
  * 调度规则：
  * - 未设置图片目录时：在 2 套动态背景中等概率二选一。
@@ -12,8 +12,8 @@
  */
 
 const DYNAMIC_BACKGROUND_MODULES = [
-  { id: "random-particles", name: "05 全向膨胀动态粒子", mount: mountRandomParticles },
-  { id: "svg-aurora", name: "04 彩带光带", mount: mountSvgAurora }
+  { id: "particles", name: "动态粒子", mount: mountRandomParticles },
+  { id: "aurora", name: "极光彩带", mount: mountSvgAurora }
 ];
 
 let activeUnmount = null;
@@ -64,7 +64,7 @@ function renderDynamicBackground(index) {
     : Math.floor(Math.random() * DYNAMIC_BACKGROUND_MODULES.length);
 
   const target = DYNAMIC_BACKGROUND_MODULES[safeIndex];
-  console.log(`[iWonder] Activated dynamic background (${safeIndex + 1}/${DYNAMIC_BACKGROUND_MODULES.length}): ${target.name}`);
+  console.log(`[iWonder Tab] Activated dynamic background (${safeIndex + 1}/${DYNAMIC_BACKGROUND_MODULES.length}): ${target.name}`);
   activeUnmount = target.mount(host);
   return target;
 }
@@ -87,29 +87,27 @@ async function selectRandomBackground(imagePath = "", imageNameList = []) {
 
   if (pick < m) {
     const chosenImage = imageNameList[pick];
-    console.log(`[iWonder] Selected local image (${pick + 1}/${m}): ${chosenImage}`);
+    console.log(`[iWonder Tab] Selected local image (${pick + 1}/${m}): ${chosenImage}`);
 
-    let loadedViaHandle = false;
+    let loadedFromCache = false;
     try {
-      const dirHandle = await getDirectoryHandle();
-      if (dirHandle && (await verifyPermission(dirHandle, false))) {
-        const fileHandle = await dirHandle.getFileHandle(chosenImage);
-        const file = await fileHandle.getFile();
+      const file = await getWallpaperFile(chosenImage);
+      if (file instanceof Blob) {
         clearDynamicBackground();
         currentBlobUrl = URL.createObjectURL(file);
         document.body.style.backgroundColor = "rgba(107, 107, 107, 0.65)";
         document.body.style.backgroundImage = `url("${currentBlobUrl}")`;
-        loadedViaHandle = true;
+        loadedFromCache = true;
       }
     } catch (err) {
-      console.warn("Could not read image via DirectoryHandle, fallback to direct path:", err);
+      console.warn("[iWonder Tab] Cached wallpaper unavailable:", err.name, err.message);
     }
 
-    if (!loadedViaHandle) {
-      clearDynamicBackground();
-      const fullPath = imagePath + chosenImage;
-      document.body.style.backgroundColor = "rgba(107, 107, 107, 0.65)";
-      document.body.style.backgroundImage = `url("file:///${fullPath}")`;
+    if (!loadedFromCache) {
+      console.info("[iWonder Tab] No cached wallpaper for this file, using a dynamic background.");
+      const dynIndex = Math.floor(Math.random() * n);
+      renderDynamicBackground(dynIndex);
+      return { type: "dynamic", index: dynIndex, meta: DYNAMIC_BACKGROUND_MODULES[dynIndex], fallbackFrom: chosenImage };
     }
 
     return { type: "image", index: pick, name: chosenImage };
