@@ -111,7 +111,7 @@ To cycle through your own picture library alongside the dynamic background suite
 2. **Open the Settings Panel**: Click the gear button to toggle the search input into the path configuration input:
    ![Settings Panel](docs/screenshots/settings-panel.png)
 
-3. **Paste Directory Path**: Copy your wallpaper folder's absolute path from your file manager (e.g., `F:\wallpaper`), paste it into the input, and press `Enter` or click the green `confirm` checkmark:
+3. **Paste Directory Path**: Copy your wallpaper folder's absolute path from your file manager (e.g., `I:\misc\000-picture\collect`), paste it into the input, and press `Enter` or click the green `confirm` checkmark:
    ![Enter Folder Path](docs/screenshots/wallpaper-path.png)
 
 4. **Confirm Folder Selection**: The system native directory picker will appear. Select the exact same directory and click "Select Folder":

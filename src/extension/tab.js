@@ -328,7 +328,7 @@ classHandler(`.confirm-button`).addEventListener("click", (event) => {
   imagePath = imagePath.trim();
   if (imagePath === "") {
     alert(
-      "Enter image folder path (e.g. F:/path/images), then confirm in the folder dialog. When Edge asks to view files, click Allow."
+      "Enter image folder path (e.g. I:/misc/000-picture/collect), then confirm in the folder dialog. When Edge asks to view files, click Allow."
     );
     return;
   }
