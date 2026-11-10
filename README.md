@@ -1,157 +1,153 @@
 # iWonder Tab
 
-极简新标签页：搜索、动态背景，可选本地壁纸。
+极简、纯粹的浏览器新标签页。打开新标签即可搜索；内置灵动的动态彩带与粒子背景，亦可指定本地相册文件夹作为壁纸池。
 
 支持 Chrome、Edge、Firefox。
 
-[English](README.en.md)
+[English Documentation](README.en.md)
 
 ---
 
-## 两种用法
+## 长什么样
 
-### 1. 把主页或新标签页设为远程地址
+在未设置本地壁纸时，每次新开标签页会在内置动态背景中等概率随机展现。
 
-适合不想装扩展、只想立刻用的情况。
+### 默认动态彩带背景
+深邃流体光带缓慢平移，每次打开还会随机呈现不同的色彩主题：
 
-将浏览器的**主页**或**新标签页**设为：
+![默认彩带背景](docs/screenshots/default-ribbons.png)
 
-https://iwu.world/
+### 默认全向膨胀粒子背景
+深空暗夜微光背景，粒子跟随鼠标指针距离产生柔和的聚散与膨胀动效：
 
-| 浏览器 | 入口 |
+![默认粒子背景](docs/screenshots/default-particles.png)
+
+### 极简界面交互
+平时可以隐藏搜索框，沉浸欣赏背景：
+
+![搜索框隐藏状态](docs/screenshots/search-hidden.png)
+
+按下任意按键（除 `Esc` 外），或在页面空白处单击鼠标，居中毛玻璃搜索栏即刻唤出：
+
+![搜索框显示状态](docs/screenshots/search-visible.png)
+
+---
+
+## 怎么用
+
+我们提供两种使用方式，您可以根据习惯自由选择：
+
+### 方式一：直接使用远程网址（零安装）
+
+如果您不想安装任何插件，只想立刻获得干净美观的起始页，可将浏览器的**主页**或**启动页**设置为：
+
+**https://iwu.world/**
+
+| 浏览器 | 设置入口推荐 |
 | --- | --- |
-| Chrome | 设置 → 启动时 / 外观 → 主页 |
-| Edge | 设置 → 启动 / 新标签页 / 主页 |
-| Firefox | 设置 → 主页 |
+| **Chrome** | 设置 → 启动时（打开特定网页） / 外观（主页按钮） |
+| **Edge** | 设置 → 开始、主页和新建标签页 |
+| **Firefox** | 设置 → 主页 → 主页和新窗口 |
 
-部分浏览器不允许把新标签页直接改成任意网址。若新标签页改不了，把**主页**设为上述地址，启动时打开主页即可。
+> **提示**：部分浏览器（如 Chrome/Edge）原生安全策略限制了将第三方非扩展网址直接作为“点击加号新建标签页”的默认行为，因此若遇到无法覆盖新建标签页的情况，请将上述网址设置为浏览器“启动时打开的主页”。远程网页模式由于运行在 Web 作用域，无法直接读取您本地磁盘的图片目录，仅提供内置动态背景。
 
-远程页无法读取你电脑上的壁纸文件夹，只能使用站点上的动态背景。
+---
 
-### 2. 安装扩展（推荐）
+### 方式二：安装浏览器扩展（推荐，完整体验）
 
-扩展会接管新标签页：打开新标签即进入本页，不必再改主页。
+扩展将直接接管浏览器新标签页，每次点击 `+` 号都会秒开 iWonder Tab，并支持本地壁纸目录读取。
 
-先到 [Releases](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest) 下载对应浏览器的 zip：
+#### 1. 下载对应安装包
+前往 [Releases](https://github.com/ThymeiWonder/browser.tab.iWonder/releases/latest) 下载对应浏览器的离线扩展包：
 
-| 浏览器 | 文件 |
+| 浏览器 | 推荐下载的安装包 |
 | --- | --- |
-| Chrome | `itab-extension-chrome.zip` |
-| Edge | `itab-extension-edge.zip` |
-| Firefox | `itab-extension-firefox.zip` |
+| **Google Chrome** | `itab-extension-chrome.zip` |
+| **Microsoft Edge** | `itab-extension-edge.zip` |
+| **Mozilla Firefox** | `itab-extension-firefox.zip` |
 
-解压到任意目录，记住解压后的文件夹（其中应有 `manifest.json`）。
+下载后解压到任意本地目录（例如 `D:\tools\itab-extension\`），文件夹内包含 `manifest.json` 等文件。
 
-**Chrome**
+#### 2. 载入浏览器
 
-1. 打开 `chrome://extensions/`
-2. 打开 **开发者模式**
-3. **加载已解压的扩展程序**，选择刚才解压出的文件夹
-4. 打开新标签页
+##### Google Chrome
+1. 地址栏输入 `chrome://extensions/` 并回车。
+2. 开启右上角 **「开发者模式」** 开关。
+3. 点击左上角 **「加载已解压的扩展程序」**，选择刚才解压出来的文件夹。
+4. 打开新标签页，即可开始使用。
 
-**Edge**
+##### Microsoft Edge
+1. 地址栏输入 `edge://extensions/` 并回车。
+2. 开启左侧菜单底部的 **「开发人员模式」** 开关。
+3. 点击 **「加载解压缩的扩展」**，选择解压出的文件夹。
+4. 打开新标签页即可使用。
 
-1. 打开 `edge://extensions/`
-2. 打开 **开发人员模式**
-3. **加载解压缩的扩展**，选择刚才解压出的文件夹
-4. 打开新标签页
-
-**Firefox**
-
-1. 打开 `about:addons`
-2. 点击齿轮 → **从文件安装附加组件**
-3. 选择下载的 `itab-extension-firefox.zip`（也可选解压后的 `manifest.json`）
-4. 打开新标签页
-
-若商店尚未上架，Firefox 也可打开 `about:debugging#/runtime/this-firefox`，用 **临时载入附加组件** 选择 zip 内的 `manifest.json`。临时载入在重启后会卸下。
-
-Firefox 不能用文件夹选择器读取本地壁纸，动态背景仍可用。
+##### Mozilla Firefox
+1. 临时载入体验：地址栏输入 `about:debugging#/runtime/this-firefox`，点击 **「临时载入附加组件」**，选中解压目录里的 `manifest.json` 即可。
+2. 离线文件安装：打开 `about:addons`，点击右上角齿轮图标，选择 **「从文件安装附加组件」**，选择下载的 `itab-extension-firefox.zip`。
 
 ---
 
-## 日常操作
+## 快捷搜索操作
 
-| 操作 | 方法 |
+| 操作 | 触发方式 |
 | --- | --- |
-| 显示搜索栏 | 按任意键（`Esc` 除外），或在空白处单击左键 / 右键 |
-| 隐藏搜索栏 | 输入框为空时按 `Esc`、中键点击搜索栏，或在搜索栏外右键 |
-| 切换搜索引擎 | 点击搜索栏左侧图标 |
-| 执行搜索 | 输入后按 `Enter`，或点击右侧搜索图标 |
+| **呼出搜索栏** | 按下键盘任意键（`Esc` 除外），或在页面空白处单击鼠标左键/右键 |
+| **隐藏搜索栏** | 在输入框内容为空时按下 `Esc` 键、用鼠标中键（滚轮）点击搜索栏，或在搜索栏外部空白处右键 |
+| **切换搜索引擎** | 单击搜索栏左侧的引擎图标打开菜单，选择您需要的引擎 |
+| **执行搜索** | 输入内容后按 `Enter` 回车，或点击右侧搜索放大镜图标 |
 
-可选引擎：Google、Bing、百度、Google AI Mode。默认 Google，选择会保存在本地。
-
-### 本地壁纸（扩展环境）
-
-1. 将鼠标移到右侧搜索按钮上，左侧出现设置按钮
-2. 打开设置
-3. 粘贴图片**文件夹**的路径（不是单个文件）
-4. 按回车或点击 confirm
-5. 在弹出的文件窗口中再次选择同一文件夹
-6. 允许浏览器查看该文件夹
-
-之后每次刷新会从本地图片与两套动态背景中等概率选一。未设置文件夹时，只在两套动态背景中选择。
+内置搜索引擎包含 **Google、Bing、百度、Google AI Mode**，默认首位为 Google。切换后系统将自动持久化保存您的引擎偏好。
 
 ---
 
-## 背景
+## 设置本地磁盘壁纸库（扩展专属）
 
-- **动态粒子**：指针靠近时放大
-- **彩带光带**：缓慢横移，每次打开随机配色
+如果您希望使用自己电脑中的壁纸文件夹，可以通过以下直观步骤配置：
 
-未指定壁纸目录时，刷新后二者等概率出现。指定目录后，目录内 `m` 张图片加上这 2 套，共 `m + 2` 中随机一张。
+1. **呼出设置按钮**：将鼠标悬停在搜索栏右侧的搜索放大镜图标上约 1~2 秒，左侧会自动滑出齿轮设置按钮：
+   ![悬浮显示设置按钮](docs/screenshots/settings-button.png)
+
+2. **进入设置界面**：点击齿轮按钮，搜索栏将切换为设置面板：
+   ![设置界面](docs/screenshots/settings-panel.png)
+
+3. **输入壁纸目录绝对路径**：在文件资源管理器中复制您的壁纸文件夹目录路径（例如 `F:\wallpaper`），粘贴至输入框，并按回车键或点击右侧绿色的 `confirm` 确认按钮：
+   ![输入图片文件夹路径](docs/screenshots/wallpaper-path.png)
+
+4. **确认文件夹授权**：系统将弹出系统的文件夹选择窗口，请再次选中刚才输入的同一个文件夹并点击「选择文件夹」：
+   ![再次选择文件夹](docs/screenshots/wallpaper-picker.png)
+
+5. **授予浏览器读取权限**：弹出「是否允许查看文件」时点 **允许**：
+   ![授权访问](docs/screenshots/wallpaper-permission.png)
+
+确认后，扩展会把该文件夹里的图片写入 IndexedDB。之后打开新标签只读这份缓存，不再访问磁盘。换文件夹需再授权一次。点 reset 会清掉路径和缓存。
 
 ---
 
-## 打包
+## 背景套件说明
+
+- **极光彩带 (`aurora`)**：多层流体贝塞尔波浪缓慢飘移交织，每次加载随机抽取深海、暮金、紫雾、珊瑚或翡翠等配色。
+- **动态粒子 (`particles`)**：带有轻微胶片微颗粒与深色景深径向底衬的星空粒子系统，随鼠标指针位置感应缩放。
+
+---
+
+## 开发者与源码构建
+
+如需基于源码进行二次开发或本地调试：
 
 ```bash
+# 1. 克隆代码仓库
+git clone https://github.com/ityme/itab.git
+cd itab
+
+# 2. 本地调试
+# 在 Chrome / Edge 扩展页面直接「加载已解压的扩展程序」，选择本项目的 src/extension/ 目录即可。
+
+# 3. 本地打包全平台扩展 Zip
 python3 scripts/package-extensions.py
 ```
 
-生成：
-
+执行打包脚本后，将在 `dist/` 目录下生成各平台独立专用的离线扩展包：
 - `dist/itab-extension-chrome.zip`
 - `dist/itab-extension-edge.zip`
 - `dist/itab-extension-firefox.zip`
-
-推送 `v*` 标签后，GitHub Actions 会将上述 zip 上传到 Release。
-
-各浏览器清单：
-
-- `src/extension/manifest.chrome.json`
-- `src/extension/manifest.edge.json`
-- `src/extension/manifest.firefox.json`
-
-打包时会将对应文件复制为 zip 内的 `manifest.json`。本地加载 Chrome / Edge 时，目录中还需名为 `manifest.json` 的文件（与 Chrome 清单相同）。
-
----
-
-## 预览
-
-搜索框显示
-
-<img width="2553" height="1230" alt="搜索框显示" src="https://github.com/user-attachments/assets/937359e6-c18c-47d0-8a15-753c032c52a2" />
-
-搜索框隐藏
-
-<img width="2559" height="1235" alt="搜索框隐藏" src="https://github.com/user-attachments/assets/260970ec-5f7e-4927-817b-c7a49c79493c" />
-
-设置按钮
-
-<img width="1355" height="848" alt="设置按钮" src="https://github.com/user-attachments/assets/e34ec12c-0b57-47b2-9126-03a7a0febc12" />
-
-设置界面
-
-<img width="1338" height="227" alt="设置界面" src="https://github.com/user-attachments/assets/a0fc9f71-436b-458e-ad40-338b921edc1b" />
-
-输入图片文件夹路径
-
-<img width="1423" height="210" alt="输入图片文件夹路径" src="https://github.com/user-attachments/assets/da92ac23-cc66-4936-9043-4833d39a48b2" />
-
-再次选择文件夹
-
-<img width="1482" height="892" alt="再次选择文件夹" src="https://github.com/user-attachments/assets/8d252bdf-8065-406b-83b3-39fbb45bb7d3" />
-
-授权访问
-
-<img width="558" height="153" alt="授权访问" src="https://github.com/user-attachments/assets/5af31252-9993-44e1-b4b3-c02313e1ecf2" />

@@ -142,3 +142,6 @@ in/
 output/
 **/tmp/
 **/temp/
+
+# 本地参考与预览，不进发版
+references/
