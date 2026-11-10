@@ -7,7 +7,7 @@
 
 // Default configuration for the application
 const DEFAULT_CONFIG = {
-  currentEngine: "baidu", // Default search engine
+  currentEngine: "google", // Default search engine
   settingsMode: "no", // 'yes' if in settings mode, 'no' otherwise
   isSearchContainerVisible: "yes", // 'yes' if the search container is visible, 'no' otherwise
 };
